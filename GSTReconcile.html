@@ -1,12 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TaxSync India — GST Reconciliation & Compliance Platform</title>
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Google Fonts: Inter -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    };
+  </script>
+  <!-- Prevent Flash of Unstyled Content (FOUC) on Dark Mode -->
+  <script>
+    (function () {
+      try {
+        const savedTheme = localStorage.getItem('taxsync_gst_theme_v1');
+        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <!-- Google Fonts: Inter & Newsreader -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet" />
@@ -27,12 +43,21 @@
     ::-webkit-scrollbar-track {
       background: #f1f5f9;
     }
+    .dark ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
     ::-webkit-scrollbar-thumb {
       background: #cbd5e1;
       border-radius: 9999px;
     }
+    .dark ::-webkit-scrollbar-thumb {
+      background: #334155;
+    }
     ::-webkit-scrollbar-thumb:hover {
       background: #94a3b8;
+    }
+    .dark ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
     }
     /* Print styling for GST Tax Invoice Modal */
     @media print {
@@ -59,16 +84,28 @@
     }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-900 antialiased selection:bg-indigo-100 selection:text-indigo-900">
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased selection:bg-indigo-100 selection:text-indigo-900 dark:selection:bg-indigo-900/60 dark:selection:text-indigo-200 transition-colors duration-200">
 
   <!-- Toast Notification Banner -->
   <div id="toast-container" class="fixed bottom-5 right-5 z-[70] flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Floating Back to Top Button -->
+  <button
+    id="back-to-top-btn"
+    type="button"
+    onclick="scrollToTop()"
+    title="Back to top"
+    aria-label="Back to top"
+    class="fixed bottom-6 right-6 z-40 hidden items-center justify-center w-11 h-11 rounded-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-400 text-white shadow-lg shadow-indigo-950/30 border border-indigo-400/30 transition-all duration-300 opacity-0 translate-y-3 hover:-translate-y-0.5 active:scale-95 cursor-pointer no-print"
+  >
+    <i data-lucide="arrow-up" class="w-5 h-5"></i>
+  </button>
 
   <!-- Main App Shell -->
   <div class="min-h-screen flex flex-col lg:flex-row">
 
     <!-- Mobile Header -->
-    <header class="lg:hidden bg-slate-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-30 shadow-md">
+    <header class="lg:hidden bg-slate-900 dark:bg-slate-950 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-30 shadow-md border-b border-slate-800">
       <div class="flex items-center gap-2.5">
         <div class="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center font-bold text-white shadow-inner">
           <i data-lucide="file-check-2" class="w-5 h-5"></i>
@@ -79,6 +116,10 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
+        <button type="button" onclick="toggleDarkMode()" title="Toggle Dark Mode" aria-label="Toggle Dark Mode" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors cursor-pointer">
+          <i data-lucide="moon" class="w-4 h-4 dark:hidden"></i>
+          <i data-lucide="sun" class="w-4 h-4 hidden dark:inline text-amber-400"></i>
+        </button>
         <button type="button" onclick="openEntityEditorModal()" title="Edit Taxpayer Entity" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/35 text-indigo-200 border border-indigo-400/30 text-xs font-semibold transition-all cursor-pointer">
           <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
           <span>Entity</span>
@@ -90,7 +131,7 @@
     </header>
 
     <!-- Sidebar Navigation -->
-    <aside id="sidebar" class="hidden lg:flex flex-col w-72 bg-slate-900 text-slate-300 shrink-0 lg:sticky lg:top-0 lg:h-screen z-40 transition-all shadow-xl lg:shadow-none">
+    <aside id="sidebar" class="hidden lg:flex flex-col w-72 bg-slate-900 dark:bg-slate-950 text-slate-300 shrink-0 lg:sticky lg:top-0 lg:h-screen z-40 transition-all shadow-xl lg:shadow-none border-r border-slate-800/80">
       <!-- Brand -->
       <div class="p-6 border-b border-slate-800 flex items-center justify-between">
         <div class="flex items-center gap-3">
@@ -102,9 +143,16 @@
             <p class="text-xs text-slate-400 mt-1">GSTR-2B & Ledger Engine</p>
           </div>
         </div>
-        <button id="close-mobile-menu" type="button" class="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
+        <div class="flex items-center gap-1">
+          <!-- Sidebar Dark Mode Toggle -->
+          <button type="button" onclick="toggleDarkMode()" title="Switch Light / Dark Mode" aria-label="Toggle Dark Mode" class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer">
+            <i data-lucide="moon" class="w-4 h-4 dark:hidden"></i>
+            <i data-lucide="sun" class="w-4 h-4 hidden dark:inline text-amber-400"></i>
+          </button>
+          <button id="close-mobile-menu" type="button" class="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
       </div>
 
       <!-- Company Taxpayer Profile Card -->
@@ -202,14 +250,22 @@
     <div class="flex-1 flex flex-col min-w-0">
 
       <!-- Top Header with Summary KPIs -->
-      <header id="main-workspace-header" class="bg-white border-b border-slate-200 px-4 sm:px-8 py-5">
+      <header id="main-workspace-header" class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-8 py-5 transition-colors">
         <div class="max-w-7xl mx-auto">
-          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-5 border-b border-slate-100">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800">
             <div>
-              <h2 id="page-title" class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Dashboard & GST Reconciliation</h2>
-              <p id="page-subtitle" class="text-xs sm:text-sm text-slate-500 mt-0.5">Compare purchase/sales GST ledger against vendor CSV filings to prevent ITC leakage.</p>
+              <h2 id="page-title" class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Dashboard & GST Reconciliation</h2>
+              <p id="page-subtitle" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">Compare purchase/sales GST ledger against vendor CSV filings to prevent ITC leakage.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2.5">
+              <!-- Desktop Theme Toggle Button -->
+              <button type="button" onclick="toggleDarkMode()" title="Toggle Light / Dark Theme" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer">
+                <i data-lucide="moon" class="w-3.5 h-3.5 dark:hidden text-indigo-600"></i>
+                <i data-lucide="sun" class="w-3.5 h-3.5 hidden dark:inline text-amber-400"></i>
+                <span class="dark:hidden">Dark</span>
+                <span class="hidden dark:inline">Light</span>
+              </button>
+
               <!-- Level Up CTA Button in Header -->
               <button id="headerLevelUpBtn" type="button" onclick="switchTab('levelup')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-sm transition-all cursor-pointer">
                 <i data-lucide="sparkles" class="w-3.5 h-3.5 pointer-events-none"></i>
@@ -217,18 +273,18 @@
                 <span id="header-plan-tag" class="px-1.5 py-0.5 rounded bg-black/20 text-[10px] uppercase">FREE</span>
               </button>
 
-              <!-- Quick-Access Taxpayer Entity Pill Button (Always Accessible on Mobile & Desktop) -->
-              <button id="headerEditEntityBtn" type="button" onclick="openEntityEditorModal()" title="View or Edit Our Taxpayer Entity Details" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white border border-slate-700 shadow-sm transition-all cursor-pointer">
+              <!-- Quick-Access Taxpayer Entity Pill Button -->
+              <button id="headerEditEntityBtn" type="button" onclick="openEntityEditorModal()" title="View or Edit Our Taxpayer Entity Details" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white border border-slate-700 shadow-sm transition-all cursor-pointer">
                 <i data-lucide="building-2" class="w-3.5 h-3.5 text-indigo-400 pointer-events-none"></i>
                 <span id="header-entity-pill" class="font-mono">27AABCA8921F1Z5</span>
                 <span class="px-1.5 py-0.5 rounded bg-indigo-500/30 text-indigo-200 text-[10px]">Edit</span>
               </button>
 
-              <button type="button" onclick="downloadGeneratedBillsCSV()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all cursor-pointer">
+              <button type="button" onclick="downloadGeneratedBillsCSV()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer">
                 <i data-lucide="download" class="w-3.5 h-3.5"></i>
                 Our Bills (CSV)
               </button>
-              <button type="button" onclick="downloadDiscrepancyReportCSV()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition-all cursor-pointer">
+              <button type="button" onclick="downloadDiscrepancyReportCSV()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/70 transition-all cursor-pointer">
                 <i data-lucide="file-warning" class="w-3.5 h-3.5"></i>
                 Discrepancy Report (CSV)
               </button>
@@ -238,49 +294,49 @@
           <!-- KPI Strip -->
           <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 pt-5">
             <!-- KPI 1: Total Invoices -->
-            <div class="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/80 flex items-start justify-between">
+            <div class="bg-slate-50/80 dark:bg-slate-800/60 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/80 flex items-start justify-between">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Reconciled Bills</p>
-                <p id="kpi-total-invoices" class="text-2xl font-extrabold text-slate-900 mt-1">0</p>
-                <p id="kpi-total-value" class="text-xs text-slate-500 mt-1">Ledger Value: ₹0</p>
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Reconciled Bills</p>
+                <p id="kpi-total-invoices" class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">0</p>
+                <p id="kpi-total-value" class="text-xs text-slate-500 dark:text-slate-400 mt-1">Ledger Value: ₹0</p>
               </div>
-              <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                 <i data-lucide="receipt" class="w-5 h-5"></i>
               </div>
             </div>
 
             <!-- KPI 2: Matched / Ready to File -->
-            <div class="bg-emerald-50/50 rounded-2xl p-4 border border-emerald-200/80 flex items-start justify-between">
+            <div class="bg-emerald-50/50 dark:bg-emerald-950/25 rounded-2xl p-4 border border-emerald-200/80 dark:border-emerald-800/60 flex items-start justify-between">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-emerald-700">Matched • Ready to File</p>
-                <p id="kpi-matched-count" class="text-2xl font-extrabold text-emerald-700 mt-1">0</p>
-                <p id="kpi-matched-itc" class="text-xs text-emerald-600 mt-1">Eligible ITC: ₹0</p>
+                <p class="text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Matched • Ready to File</p>
+                <p id="kpi-matched-count" class="text-2xl font-extrabold text-emerald-700 dark:text-emerald-300 mt-1">0</p>
+                <p id="kpi-matched-itc" class="text-xs text-emerald-600 dark:text-emerald-400/90 mt-1">Eligible ITC: ₹0</p>
               </div>
-              <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
                 <i data-lucide="check-circle-2" class="w-5 h-5"></i>
               </div>
             </div>
 
             <!-- KPI 3: Discrepancies Found -->
-            <div class="bg-rose-50/50 rounded-2xl p-4 border border-rose-200/80 flex items-start justify-between">
+            <div class="bg-rose-50/50 dark:bg-rose-950/25 rounded-2xl p-4 border border-rose-200/80 dark:border-rose-800/60 flex items-start justify-between">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-rose-700">Discrepancies Found</p>
-                <p id="kpi-discrepancy-count" class="text-2xl font-extrabold text-rose-700 mt-1">0</p>
-                <p id="kpi-tax-at-risk" class="text-xs text-rose-600 mt-1">ITC at Risk: ₹0</p>
+                <p class="text-xs font-semibold uppercase tracking-wider text-rose-700 dark:text-rose-400">Discrepancies Found</p>
+                <p id="kpi-discrepancy-count" class="text-2xl font-extrabold text-rose-700 dark:text-rose-300 mt-1">0</p>
+                <p id="kpi-tax-at-risk" class="text-xs text-rose-600 dark:text-rose-400/90 mt-1">ITC at Risk: ₹0</p>
               </div>
-              <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400 flex items-center justify-center">
                 <i data-lucide="alert-triangle" class="w-5 h-5"></i>
               </div>
             </div>
 
             <!-- KPI 4: High-Risk Vendors -->
-            <div class="bg-amber-50/50 rounded-2xl p-4 border border-amber-200/80 flex items-start justify-between">
+            <div class="bg-amber-50/50 dark:bg-amber-950/25 rounded-2xl p-4 border border-amber-200/80 dark:border-amber-800/60 flex items-start justify-between">
               <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-amber-800">High-Risk Vendors</p>
-                <p id="kpi-highrisk-vendors" class="text-2xl font-extrabold text-amber-700 mt-1">0</p>
-                <p id="kpi-total-vendors" class="text-xs text-amber-700/80 mt-1">Out of 0 active vendors</p>
+                <p class="text-xs font-semibold uppercase tracking-wider text-amber-800 dark:text-amber-400">High-Risk Vendors</p>
+                <p id="kpi-highrisk-vendors" class="text-2xl font-extrabold text-amber-700 dark:text-amber-300 mt-1">0</p>
+                <p id="kpi-total-vendors" class="text-xs text-amber-700/80 dark:text-amber-400/80 mt-1">Out of 0 active vendors</p>
               </div>
-              <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                 <i data-lucide="shield-alert" class="w-5 h-5"></i>
               </div>
             </div>
@@ -297,16 +353,16 @@
         <section id="view-dashboard" class="space-y-6">
 
           <!-- Action Toolbar: Filters & Priority Rectification Email Trigger -->
-          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div class="flex flex-wrap items-center gap-2.5">
               <!-- Search Input -->
               <div class="relative w-full sm:w-64">
                 <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-                <input type="text" id="recon-search" placeholder="Search Invoice #, Vendor, GSTIN..." class="w-full pl-9 pr-3.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
+                <input type="text" id="recon-search" placeholder="Search Invoice #, Vendor, GSTIN..." class="w-full pl-9 pr-3.5 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
               </div>
 
               <!-- Status Filter -->
-              <select id="recon-status-filter" class="px-3.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+              <select id="recon-status-filter" class="px-3.5 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
                 <option value="ALL">All Statuses</option>
                 <option value="DISCREPANCIES_ONLY">All Discrepancies Only</option>
                 <option value="Exact Match">Exact Match (Ready to File)</option>
@@ -317,7 +373,7 @@
               </select>
 
               <!-- Severity Filter -->
-              <select id="recon-severity-filter" class="px-3.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+              <select id="recon-severity-filter" class="px-3.5 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
                 <option value="ALL">All Severities</option>
                 <option value="Critical">Critical Severity</option>
                 <option value="High">High Severity</option>
@@ -329,7 +385,7 @@
 
             <!-- Selected Discrepancy Resolution Action -->
             <div class="flex flex-wrap items-center gap-2.5">
-              <span id="selected-count-label" class="text-xs font-medium text-slate-500">0 discrepancies selected</span>
+              <span id="selected-count-label" class="text-xs font-medium text-slate-500 dark:text-slate-400">0 discrepancies selected</span>
               <button id="btn-draft-selected-email" type="button" onclick="openRectificationModalForSelected()" disabled class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
                 <i data-lucide="mail-warning" class="w-4 h-4"></i>
                 Draft Rectification Email
@@ -338,13 +394,13 @@
           </div>
 
           <!-- Reconciliation Table Card -->
-          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
               <table class="w-full text-left border-collapse">
                 <thead>
-                  <tr class="bg-slate-50/90 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  <tr class="bg-slate-50/90 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     <th class="py-3.5 pl-4 pr-2 w-10">
-                      <input type="checkbox" id="select-all-discrepancies" title="Select all discrepancy rows" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
+                      <input type="checkbox" id="select-all-discrepancies" title="Select all discrepancy rows" class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
                     </th>
                     <th class="py-3.5 px-3">Invoice & Date</th>
                     <th class="py-3.5 px-3">Vendor & Risk</th>
@@ -356,25 +412,25 @@
                     <th class="py-3.5 pl-3 pr-4 text-right">Next Action</th>
                   </tr>
                 </thead>
-                <tbody id="reconciliation-table-body" class="divide-y divide-slate-100 text-sm">
+                <tbody id="reconciliation-table-body" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
                   <!-- Populated dynamically by JS -->
                 </tbody>
               </table>
             </div>
             <!-- Empty state -->
             <div id="recon-empty-state" class="hidden py-12 px-4 text-center">
-              <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+              <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto mb-3">
                 <i data-lucide="search-x" class="w-6 h-6"></i>
               </div>
-              <h4 class="text-sm font-semibold text-slate-800">No matching GST records found</h4>
-              <p class="text-xs text-slate-500 mt-1">Try adjusting your filters or generate/import new GST bills.</p>
+              <h4 class="text-sm font-semibold text-slate-800 dark:text-slate-200">No matching GST records found</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Try adjusting your filters or generate/import new GST bills.</p>
             </div>
           </div>
 
           <!-- Helper Legend Banner -->
-          <div class="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-indigo-900">
+          <div class="bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/60 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-indigo-900 dark:text-indigo-200">
             <div class="flex items-start gap-2.5">
-              <i data-lucide="info" class="w-4 h-4 text-indigo-600 shrink-0 mt-0.5"></i>
+              <i data-lucide="info" class="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5"></i>
               <div>
                 <span class="font-semibold">How Reconciliation Workflow Works:</span>
                 Select one or more discrepancy rows (same vendor recommended for consolidated notice) and click <strong>Draft Rectification Email</strong> to notify the vendor. For <strong>Exact Match</strong> bills, click <strong>File on GST Portal ↗</strong> to proceed with GSTR-3B / GSTR-1 filing.
@@ -390,29 +446,29 @@
           <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
 
             <!-- Left Column: GST Bill Creation Form -->
-            <div class="xl:col-span-8 bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
-              <div class="flex items-center justify-between pb-4 mb-5 border-b border-slate-100">
+            <div class="xl:col-span-8 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 sm:p-6">
+              <div class="flex items-center justify-between pb-4 mb-5 border-b border-slate-100 dark:border-slate-800">
                 <div>
-                  <h3 class="text-base sm:text-lg font-bold text-slate-900">Create New GST Tax Invoice</h3>
-                  <p class="text-xs text-slate-500 mt-0.5">Enter product, HSN, and vendor details to record in our GST ledger.</p>
+                  <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Create New GST Tax Invoice</h3>
+                  <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Enter product, HSN, and vendor details to record in our GST ledger.</p>
                 </div>
-                <span class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-semibold">Auto-Reconciles on Save</span>
+                <span class="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-xs font-semibold">Auto-Reconciles on Save</span>
               </div>
 
               <form id="gst-bill-form" class="space-y-6">
                 <!-- Our Taxpayer Entity Summary Banner (Editable) -->
-                <div class="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="p-3.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/35 border border-indigo-200/80 dark:border-indigo-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
-                      <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-700">Our Taxpayer Entity (Billing Entity)</span>
-                      <span id="bill-form-entity-state-badge" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white text-indigo-700 border border-indigo-200">27-Maharashtra</span>
+                      <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">Our Taxpayer Entity (Billing Entity)</span>
+                      <span id="bill-form-entity-state-badge" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white dark:bg-slate-800 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700">27-Maharashtra</span>
                     </div>
-                    <p id="bill-form-entity-name" class="text-xs sm:text-sm font-bold text-slate-900 mt-0.5 truncate">Apex Enterprise Solutions Pvt Ltd</p>
-                    <p class="text-[11px] font-mono text-slate-600 mt-0.5">
-                      GSTIN: <strong id="bill-form-entity-gstin" class="text-slate-900">27AABCA8921F1Z5</strong> • <span id="bill-form-entity-contact" class="font-sans">gst.compliance@apexenterprise.in</span>
+                    <p id="bill-form-entity-name" class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white mt-0.5 truncate">Apex Enterprise Solutions Pvt Ltd</p>
+                    <p class="text-[11px] font-mono text-slate-600 dark:text-slate-400 mt-0.5">
+                      GSTIN: <strong id="bill-form-entity-gstin" class="text-slate-900 dark:text-slate-200">27AABCA8921F1Z5</strong> • <span id="bill-form-entity-contact" class="font-sans">gst.compliance@apexenterprise.in</span>
                     </p>
                   </div>
-                  <button id="editEntityFormBtn" type="button" onclick="openEntityEditorModal()" class="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200 shadow-sm transition-all cursor-pointer">
+                  <button id="editEntityFormBtn" type="button" onclick="openEntityEditorModal()" class="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-slate-800 hover:bg-indigo-600 dark:hover:bg-indigo-600 text-indigo-700 dark:text-indigo-300 hover:text-white dark:hover:text-white border border-indigo-200 dark:border-indigo-700 shadow-sm transition-all cursor-pointer">
                     <i data-lucide="building" class="w-3.5 h-3.5 pointer-events-none"></i>
                     <span>Edit Entity Details</span>
                   </button>
@@ -421,16 +477,16 @@
                 <!-- Invoice Metadata -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Invoice Number *</label>
-                    <input type="text" id="bill-inv-no" required placeholder="e.g., INV-2026-109" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Invoice Number *</label>
+                    <input type="text" id="bill-inv-no" required placeholder="e.g., INV-2026-109" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-mono text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
                   </div>
                   <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Invoice Date *</label>
-                    <input type="date" id="bill-inv-date" required class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Invoice Date *</label>
+                    <input type="date" id="bill-inv-date" required class="w-full px-3.5 py-2.5 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
                   </div>
                   <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Supply Type (Tax Rule) *</label>
-                    <select id="bill-supply-type" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Supply Type (Tax Rule) *</label>
+                    <select id="bill-supply-type" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
                       <option value="INTRA">Intra-State (CGST + SGST)</option>
                       <option value="INTER">Inter-State (IGST)</option>
                     </select>
@@ -438,31 +494,31 @@
                 </div>
 
                 <!-- Vendor Details -->
-                <div class="p-4 rounded-xl bg-slate-50/80 border border-slate-200/80 space-y-4">
+                <div class="p-4 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 space-y-4">
                   <div class="flex flex-wrap items-center justify-between gap-2">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600">Counterparty / Vendor Details</h4>
-                    <select id="quick-fill-vendor" class="text-xs bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-slate-600">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Counterparty / Vendor Details</h4>
+                    <select id="quick-fill-vendor" class="text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 py-1 text-slate-600 dark:text-slate-300">
                       <option value="">-- Quick-fill existing vendor --</option>
                     </select>
                   </div>
 
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label class="block text-xs font-semibold text-slate-700 mb-1.5">Vendor Legal Name *</label>
-                      <input type="text" id="bill-vendor-name" required placeholder="e.g., Bharat Tech Components Ltd" class="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
+                      <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Vendor Legal Name *</label>
+                      <input type="text" id="bill-vendor-name" required placeholder="e.g., Bharat Tech Components Ltd" class="w-full px-3.5 py-2.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
                     </div>
                     <div>
-                      <label class="block text-xs font-semibold text-slate-700 mb-1.5">Vendor GSTIN (15-Digit) *</label>
-                      <input type="text" id="bill-vendor-gstin" required maxlength="15" placeholder="27AAACB1234F1Z2" class="w-full px-3.5 py-2.5 text-sm uppercase font-mono bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
+                      <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Vendor GSTIN (15-Digit) *</label>
+                      <input type="text" id="bill-vendor-gstin" required maxlength="15" placeholder="27AAACB1234F1Z2" class="w-full px-3.5 py-2.5 text-sm uppercase font-mono bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
                       <p id="gstin-validation-hint" class="text-[11px] text-slate-400 mt-1">Format: 2-digit State Code + 10-char PAN + 1Z + Checksum</p>
                     </div>
                     <div>
-                      <label class="block text-xs font-semibold text-slate-700 mb-1.5">Vendor Compliance Email *</label>
-                      <input type="email" id="bill-vendor-email" required placeholder="gst.accounts@vendor.in" class="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
+                      <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Vendor Compliance Email *</label>
+                      <input type="email" id="bill-vendor-email" required placeholder="gst.accounts@vendor.in" class="w-full px-3.5 py-2.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
                     </div>
                     <div>
-                      <label class="block text-xs font-semibold text-slate-700 mb-1.5">Place of Supply (State) *</label>
-                      <select id="bill-vendor-state" class="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                      <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Place of Supply (State) *</label>
+                      <select id="bill-vendor-state" class="w-full px-3.5 py-2.5 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
                         <option value="27-Maharashtra">27 - Maharashtra</option>
                         <option value="29-Karnataka">29 - Karnataka</option>
                         <option value="07-Delhi">07 - Delhi</option>
@@ -478,17 +534,17 @@
                 <!-- Line Items Section -->
                 <div class="space-y-3">
                   <div class="flex items-center justify-between">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600">Line Items (Goods / Services)</h4>
-                    <button type="button" onclick="addLineItemRow()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 transition-all">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">Line Items (Goods / Services)</h4>
+                    <button type="button" onclick="addLineItemRow()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/80 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 transition-all">
                       <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                       Add Item Row
                     </button>
                   </div>
 
-                  <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                  <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xl">
                     <table class="w-full text-left border-collapse min-w-[620px]">
                       <thead>
-                        <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase text-slate-500">
+                        <tr class="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400">
                           <th class="py-2.5 px-3">Description *</th>
                           <th class="py-2.5 px-2 w-24">HSN/SAC</th>
                           <th class="py-2.5 px-2 w-20">Qty</th>
@@ -498,7 +554,7 @@
                           <th class="py-2.5 px-2 w-10"></th>
                         </tr>
                       </thead>
-                      <tbody id="bill-items-tbody" class="divide-y divide-slate-100 text-sm">
+                      <tbody id="bill-items-tbody" class="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
                         <!-- Dynamic rows inserted here -->
                       </tbody>
                     </table>
@@ -506,37 +562,37 @@
                 </div>
 
                 <!-- Live Summary & Form Actions -->
-                <div class="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+                <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
                   <div class="flex flex-wrap gap-2.5">
                     <button type="submit" class="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 transition-all">
                       <i data-lucide="check-circle" class="w-4 h-4"></i>
                       Save to Ledger & Reconcile
                     </button>
-                    <button type="button" onclick="previewCurrentFormInvoice()" class="inline-flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 transition-all">
+                    <button type="button" onclick="previewCurrentFormInvoice()" class="inline-flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-all">
                       <i data-lucide="printer" class="w-4 h-4"></i>
                       Preview / Print Invoice
                     </button>
                   </div>
 
                   <!-- Live Tax Totals Box -->
-                  <div class="w-full sm:w-72 bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-2 text-xs">
-                    <div class="flex justify-between text-slate-600">
+                  <div class="w-full sm:w-72 bg-slate-50 dark:bg-slate-800/80 rounded-xl p-4 border border-slate-200 dark:border-slate-700 space-y-2 text-xs">
+                    <div class="flex justify-between text-slate-600 dark:text-slate-400">
                       <span>Taxable Value:</span>
-                      <span id="calc-taxable" class="font-semibold text-slate-900">₹0.00</span>
+                      <span id="calc-taxable" class="font-semibold text-slate-900 dark:text-white">₹0.00</span>
                     </div>
-                    <div id="calc-cgst-row" class="flex justify-between text-slate-600">
+                    <div id="calc-cgst-row" class="flex justify-between text-slate-600 dark:text-slate-400">
                       <span>CGST:</span>
-                      <span id="calc-cgst" class="font-medium text-slate-800">₹0.00</span>
+                      <span id="calc-cgst" class="font-medium text-slate-800 dark:text-slate-200">₹0.00</span>
                     </div>
-                    <div id="calc-sgst-row" class="flex justify-between text-slate-600">
+                    <div id="calc-sgst-row" class="flex justify-between text-slate-600 dark:text-slate-400">
                       <span>SGST:</span>
-                      <span id="calc-sgst" class="font-medium text-slate-800">₹0.00</span>
+                      <span id="calc-sgst" class="font-medium text-slate-800 dark:text-slate-200">₹0.00</span>
                     </div>
-                    <div id="calc-igst-row" class="hidden flex justify-between text-slate-600">
+                    <div id="calc-igst-row" class="hidden flex justify-between text-slate-600 dark:text-slate-400">
                       <span>IGST:</span>
-                      <span id="calc-igst" class="font-medium text-slate-800">₹0.00</span>
+                      <span id="calc-igst" class="font-medium text-slate-800 dark:text-slate-200">₹0.00</span>
                     </div>
-                    <div class="pt-2 border-t border-slate-200 flex justify-between text-sm font-bold text-indigo-700">
+                    <div class="pt-2 border-t border-slate-200 dark:border-slate-700 flex justify-between text-sm font-bold text-indigo-700 dark:text-indigo-400">
                       <span>Grand Total:</span>
                       <span id="calc-grand-total">₹0.00</span>
                     </div>
@@ -546,13 +602,13 @@
             </div>
 
             <!-- Right Column: Recently Generated Bills Ledger -->
-            <div class="xl:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col">
-              <div class="flex items-center justify-between pb-3.5 mb-4 border-b border-slate-100">
+            <div class="xl:col-span-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 flex flex-col">
+              <div class="flex items-center justify-between pb-3.5 mb-4 border-b border-slate-100 dark:border-slate-800">
                 <div>
-                  <h3 class="text-base font-bold text-slate-900">Our Generated GST Bills</h3>
-                  <p class="text-xs text-slate-500">Click any bill to view/print PDF invoice</p>
+                  <h3 class="text-base font-bold text-slate-900 dark:text-white">Our Generated GST Bills</h3>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Click any bill to view/print PDF invoice</p>
                 </div>
-                <button type="button" onclick="downloadGeneratedBillsCSV()" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700" title="Export Generated Bills CSV">
+                <button type="button" onclick="downloadGeneratedBillsCSV()" class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300" title="Export Generated Bills CSV">
                   <i data-lucide="download" class="w-4 h-4"></i>
                 </button>
               </div>
@@ -572,38 +628,38 @@
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
             <!-- Upload Card -->
-            <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
+            <div class="lg:col-span-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 space-y-5">
               <div>
-                <h3 class="text-lg font-bold text-slate-900">Import Vendor GST CSV</h3>
-                <p class="text-xs text-slate-500 mt-1">Upload vendor-shared GST invoice exports (GSTR-1 / GSTR-2B format) to run automated reconciliation against your ledger.</p>
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Import Vendor GST CSV</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Upload vendor-shared GST invoice exports (GSTR-1 / GSTR-2B format) to run automated reconciliation against your ledger.</p>
               </div>
 
               <!-- Drag & Drop Dropzone -->
-              <div id="csv-dropzone" class="border-2 border-dashed border-slate-300 hover:border-indigo-500 bg-slate-50/70 hover:bg-indigo-50/30 rounded-2xl p-8 text-center cursor-pointer transition-all">
+              <div id="csv-dropzone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 bg-slate-50/70 dark:bg-slate-800/50 hover:bg-indigo-50/30 dark:hover:bg-indigo-950/30 rounded-2xl p-8 text-center cursor-pointer transition-all">
                 <input type="file" id="csv-file-input" accept=".csv" class="hidden" />
-                <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mx-auto mb-3">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-3">
                   <i data-lucide="upload-cloud" class="w-6 h-6"></i>
                 </div>
-                <p class="text-sm font-semibold text-slate-800">Drop Vendor CSV file here, or <span class="text-indigo-600 underline">browse</span></p>
+                <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">Drop Vendor CSV file here, or <span class="text-indigo-600 dark:text-indigo-400 underline">browse</span></p>
                 <p class="text-xs text-slate-400 mt-1">Supports standard CSV with InvoiceNo, InvoiceDate, VendorName, VendorGSTIN, TaxableValue, CGST, SGST, IGST, TotalAmount</p>
               </div>
 
               <!-- Expected CSV Format Guide -->
-              <div class="text-xs text-slate-500 bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
-                <p class="font-semibold text-slate-700 mb-1">Required CSV Headers (Optional RecipientGSTIN checked against Our GSTIN):</p>
-                <code class="block text-[11px] font-mono text-slate-600 break-all">InvoiceNo,InvoiceDate,VendorName,VendorGSTIN,VendorEmail,TaxableValue,CGST,SGST,IGST,TotalAmount,RecipientGSTIN</code>
+              <div class="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/70 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80">
+                <p class="font-semibold text-slate-700 dark:text-slate-200 mb-1">Required CSV Headers (Optional RecipientGSTIN checked against Our GSTIN):</p>
+                <code class="block text-[11px] font-mono text-slate-600 dark:text-slate-300 break-all">InvoiceNo,InvoiceDate,VendorName,VendorGSTIN,VendorEmail,TaxableValue,CGST,SGST,IGST,TotalAmount,RecipientGSTIN</code>
               </div>
             </div>
 
             <!-- Parsed Preview & Import Action Card -->
-            <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col">
-              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-100">
+            <div class="lg:col-span-7 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 flex flex-col">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-100 dark:border-slate-800">
                 <div>
-                  <h3 class="text-base font-bold text-slate-900">Staged Vendor CSV Preview</h3>
-                  <p id="csv-preview-subtitle" class="text-xs text-slate-500 mt-0.5">Upload a CSV file or load sample data to inspect parsed rows before reconciling.</p>
+                  <h3 class="text-base font-bold text-slate-900 dark:text-white">Staged Vendor CSV Preview</h3>
+                  <p id="csv-preview-subtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Upload a CSV file or load sample data to inspect parsed rows before reconciling.</p>
                 </div>
                 <div class="flex items-center gap-2">
-                  <select id="csv-import-mode" class="px-3 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl text-slate-700">
+                  <select id="csv-import-mode" class="px-3 py-2 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200">
                     <option value="MERGE">Merge / Upsert Records</option>
                     <option value="REPLACE">Replace All Vendor Data</option>
                   </select>
@@ -614,10 +670,10 @@
                 </div>
               </div>
 
-              <div class="overflow-x-auto border border-slate-200 rounded-xl flex-1">
+              <div class="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-xl flex-1">
                 <table class="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase text-slate-500">
+                    <tr class="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-[11px] font-bold uppercase text-slate-500 dark:text-slate-400">
                       <th class="py-2.5 px-3">Invoice #</th>
                       <th class="py-2.5 px-3">Date</th>
                       <th class="py-2.5 px-3">Vendor & GSTIN</th>
@@ -626,7 +682,7 @@
                       <th class="py-2.5 px-3 text-right">Total</th>
                     </tr>
                   </thead>
-                  <tbody id="csv-preview-tbody" class="divide-y divide-slate-100">
+                  <tbody id="csv-preview-tbody" class="divide-y divide-slate-100 dark:divide-slate-800">
                     <tr>
                       <td colspan="6" class="py-12 px-4 text-center text-slate-400">
                         No CSV staged yet. Drag & drop a vendor CSV on the left or click <strong>Load Sample CSV Preview</strong>.
@@ -644,14 +700,14 @@
              VIEW 4: VENDOR RISK & DIRECTORY
         ====================================================================== -->
         <section id="view-vendors" class="hidden space-y-6">
-          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 class="text-base sm:text-lg font-bold text-slate-900">Vendor Compliance & Risk Directory</h3>
-              <p class="text-xs text-slate-500 mt-0.5">Vendors are scored automatically based on mismatch frequency and Input Tax Credit (ITC) exposure.</p>
+              <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">Vendor Compliance & Risk Directory</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Vendors are scored automatically based on mismatch frequency and Input Tax Credit (ITC) exposure.</p>
             </div>
-            <div class="flex items-center gap-2 text-xs">
-              <span class="px-2.5 py-1 rounded-full font-semibold bg-rose-100 text-rose-700">● High Risk (≥40% mismatch or ≥₹10k ITC risk)</span>
-              <span class="px-2.5 py-1 rounded-full font-semibold bg-emerald-100 text-emerald-700">● Low Risk (100% matched)</span>
+            <div class="flex flex-wrap items-center gap-2 text-xs">
+              <span class="px-2.5 py-1 rounded-full font-semibold bg-rose-100 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300">● High Risk (≥40% mismatch or ≥₹10k ITC risk)</span>
+              <span class="px-2.5 py-1 rounded-full font-semibold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300">● Low Risk (100% matched)</span>
             </div>
           </div>
 
@@ -663,33 +719,33 @@
         <!-- =====================================================================
              VIEW 5: LEVEL UP — FREEMIUM & SUBSCRIPTION PLANS PAGE
         ====================================================================== -->
-        <section id="view-levelup" class="hidden -mx-4 sm:-mx-8 -my-6 px-4 sm:px-8 py-6 sm:py-10 bg-[#FAF9F6] min-h-[calc(100vh-4rem)]">
+        <section id="view-levelup" class="hidden -mx-4 sm:-mx-8 -my-6 px-4 sm:px-8 py-6 sm:py-10 bg-[#FAF9F6] dark:bg-slate-950 min-h-[calc(100vh-4rem)] transition-colors">
           <div class="max-w-6xl mx-auto">
 
             <!-- Top Back Arrow Bar -->
             <div class="flex items-center justify-between mb-6">
-              <button type="button" onclick="returnFromLevelUp()" class="inline-flex items-center gap-2 p-2 -ml-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-stone-200/60 transition-all cursor-pointer" title="Back to workspace">
+              <button type="button" onclick="returnFromLevelUp()" class="inline-flex items-center gap-2 p-2 -ml-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-stone-200/60 dark:hover:bg-slate-800 transition-all cursor-pointer" title="Back to workspace">
                 <i data-lucide="arrow-left" class="w-5 h-5"></i>
                 <span class="text-xs font-medium hidden sm:inline">Back to workspace</span>
               </button>
-              <div class="flex items-center gap-2 text-xs text-stone-500">
+              <div class="flex items-center gap-2 text-xs text-stone-500 dark:text-slate-400">
                 <span>Current active plan:</span>
-                <span id="levelup-current-pill" class="px-2.5 py-0.5 rounded-full font-bold bg-stone-900 text-white uppercase tracking-wider text-[11px]">Free (₹0/mo)</span>
+                <span id="levelup-current-pill" class="px-2.5 py-0.5 rounded-full font-bold bg-stone-900 dark:bg-indigo-600 text-white uppercase tracking-wider text-[11px]">Free (₹0/mo)</span>
               </div>
             </div>
 
             <!-- Editorial Headline & Segment Toggle -->
             <div class="text-center max-w-2xl mx-auto space-y-5 mb-10">
-              <h1 class="font-editorial text-3xl sm:text-5xl font-medium text-stone-900 tracking-tight">
+              <h1 class="font-editorial text-3xl sm:text-5xl font-medium text-stone-900 dark:text-white tracking-tight">
                 Plans that grow with you
               </h1>
 
               <!-- Segmented Audience Pill (Individual / CA & Enterprise) -->
-              <div class="inline-flex items-center p-1 rounded-xl bg-stone-200/70 border border-stone-300/70">
-                <button type="button" id="seg-individual" onclick="setLevelUpSegment('individual')" class="px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white text-stone-900 shadow-sm transition-all cursor-pointer">
+              <div class="inline-flex items-center p-1 rounded-xl bg-stone-200/70 dark:bg-slate-800 border border-stone-300/70 dark:border-slate-700">
+                <button type="button" id="seg-individual" onclick="setLevelUpSegment('individual')" class="px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white dark:bg-slate-700 text-stone-900 dark:text-white shadow-sm transition-all cursor-pointer">
                   Individual & SMEs
                 </button>
-                <button type="button" id="seg-enterprise" onclick="setLevelUpSegment('enterprise')" class="px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-stone-600 hover:text-stone-900 transition-all cursor-pointer">
+                <button type="button" id="seg-enterprise" onclick="setLevelUpSegment('enterprise')" class="px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-stone-600 dark:text-slate-300 hover:text-stone-900 dark:hover:text-white transition-all cursor-pointer">
                   CA Firms & Enterprise
                 </button>
               </div>
@@ -699,10 +755,10 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
 
               <!-- CARD 1: FREE (₹0) -->
-              <div id="plan-card-FREE" class="bg-white rounded-2xl border border-stone-200/90 p-7 flex flex-col justify-between shadow-sm transition-all">
+              <div id="plan-card-FREE" class="bg-white dark:bg-slate-900 rounded-2xl border border-stone-200/90 dark:border-slate-800 p-7 flex flex-col justify-between shadow-sm transition-all">
                 <div>
                   <!-- Minimalist Botanical Sprout SVG (1-Node) -->
-                  <div class="w-12 h-12 mb-5 text-stone-800">
+                  <div class="w-12 h-12 mb-5 text-stone-800 dark:text-slate-200">
                     <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="w-11 h-11">
                       <circle cx="24" cy="14" r="5" />
                       <circle cx="24" cy="14" r="1.5" fill="currentColor" />
@@ -713,47 +769,47 @@
                   </div>
 
                   <div class="flex items-center justify-between gap-2">
-                    <h3 class="text-2xl font-bold text-stone-900 tracking-tight">Free</h3>
-                    <span id="badge-active-FREE" class="hidden px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">Active Plan</span>
+                    <h3 class="text-2xl font-bold text-stone-900 dark:text-white tracking-tight">Free</h3>
+                    <span id="badge-active-FREE" class="hidden px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">Active Plan</span>
                   </div>
-                  <p id="desc-plan-FREE" class="text-sm text-stone-500 mt-1">Get started with TaxSync GST</p>
+                  <p id="desc-plan-FREE" class="text-sm text-stone-500 dark:text-slate-400 mt-1">Get started with TaxSync GST</p>
 
                   <!-- Price -->
                   <div class="mt-6 mb-6">
                     <div class="flex items-baseline gap-1">
-                      <span class="text-4xl font-bold text-stone-900 tracking-tight">₹0</span>
+                      <span class="text-4xl font-bold text-stone-900 dark:text-white tracking-tight">₹0</span>
                     </div>
                     <p class="text-xs text-stone-400 mt-1">Free forever • No credit card required</p>
                   </div>
 
                   <!-- CTA Button -->
-                  <button id="btn-select-FREE" type="button" onclick="selectSubscriptionPlan('FREE')" class="w-full py-3 px-4 rounded-xl text-sm font-semibold bg-stone-100 hover:bg-stone-200 text-stone-900 border border-stone-200/80 transition-all cursor-pointer">
+                  <button id="btn-select-FREE" type="button" onclick="selectSubscriptionPlan('FREE')" class="w-full py-3 px-4 rounded-xl text-sm font-semibold bg-stone-100 dark:bg-slate-800 hover:bg-stone-200 dark:hover:bg-slate-700 text-stone-900 dark:text-white border border-stone-200/80 dark:border-slate-700 transition-all cursor-pointer">
                     Use TaxSync for free
                   </button>
                   <p class="text-[11px] text-center text-transparent mt-2 select-none">Spacer</p>
 
-                  <hr class="my-5 border-stone-200/80" />
+                  <hr class="my-5 border-stone-200/80 dark:border-slate-800" />
 
                   <!-- Checklist -->
-                  <ul class="space-y-3 text-sm text-stone-700">
+                  <ul class="space-y-3 text-sm text-stone-700 dark:text-slate-300">
                     <li class="flex items-start gap-2.5">
-                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 dark:text-indigo-400 shrink-0 mt-0.5"></i>
                       <span>Generate & compare up to <strong>15 bills / month</strong></span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 dark:text-indigo-400 shrink-0 mt-0.5"></i>
                       <span>Automated CGST, SGST & IGST calculation</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 dark:text-indigo-400 shrink-0 mt-0.5"></i>
                       <span>Basic invoice reconciliation & variance check</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 dark:text-indigo-400 shrink-0 mt-0.5"></i>
                       <span>Printable GST Tax Invoice PDF & CSV export</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 dark:text-indigo-400 shrink-0 mt-0.5"></i>
                       <span>Single taxpayer entity profile</span>
                     </li>
                   </ul>
@@ -761,11 +817,11 @@
               </div>
 
               <!-- CARD 2: PRO -->
-              <div id="plan-card-PRO" class="bg-white rounded-2xl border border-stone-200/90 p-7 flex flex-col justify-between shadow-sm transition-all">
+              <div id="plan-card-PRO" class="bg-white dark:bg-slate-900 rounded-2xl border border-stone-200/90 dark:border-slate-800 p-7 flex flex-col justify-between shadow-sm transition-all">
                 <div>
                   <!-- Top Row: Botanical 3-Node Icon + Billing Cycle Toggle Pill -->
                   <div class="flex items-start justify-between gap-2 mb-5">
-                    <div class="w-12 h-12 text-stone-800">
+                    <div class="w-12 h-12 text-stone-800 dark:text-slate-200">
                       <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="w-11 h-11">
                         <circle cx="24" cy="11" r="4.5" />
                         <circle cx="14" cy="20" r="3.5" />
@@ -779,59 +835,59 @@
                     </div>
 
                     <!-- Monthly / Yearly Save 17% Pill -->
-                    <div class="inline-flex items-center p-0.5 rounded-full bg-stone-100 border border-stone-200 text-[11px]">
-                      <button type="button" id="bill-cycle-monthly" onclick="setBillingCycle('monthly')" class="px-2.5 py-1 rounded-full font-semibold bg-white text-stone-900 shadow-xs transition-all cursor-pointer">
+                    <div class="inline-flex items-center p-0.5 rounded-full bg-stone-100 dark:bg-slate-800 border border-stone-200 dark:border-slate-700 text-[11px]">
+                      <button type="button" id="bill-cycle-monthly" onclick="setBillingCycle('monthly')" class="px-2.5 py-1 rounded-full font-semibold bg-white dark:bg-slate-700 text-stone-900 dark:text-white shadow-xs transition-all cursor-pointer">
                         Monthly
                       </button>
-                      <button type="button" id="bill-cycle-yearly" onclick="setBillingCycle('yearly')" class="px-2.5 py-1 rounded-full font-medium text-indigo-600 hover:text-indigo-700 transition-all cursor-pointer">
+                      <button type="button" id="bill-cycle-yearly" onclick="setBillingCycle('yearly')" class="px-2.5 py-1 rounded-full font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 transition-all cursor-pointer">
                         Yearly · Save 17%
                       </button>
                     </div>
                   </div>
 
                   <div class="flex items-center justify-between gap-2">
-                    <h3 id="title-plan-PRO" class="text-2xl font-bold text-stone-900 tracking-tight">Pro</h3>
-                    <span id="badge-active-PRO" class="hidden px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">Active Plan</span>
+                    <h3 id="title-plan-PRO" class="text-2xl font-bold text-stone-900 dark:text-white tracking-tight">Pro</h3>
+                    <span id="badge-active-PRO" class="hidden px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">Active Plan</span>
                   </div>
-                  <p id="desc-plan-PRO" class="text-sm text-stone-500 mt-1">Reconcile faster & automate notices</p>
+                  <p id="desc-plan-PRO" class="text-sm text-stone-500 dark:text-slate-400 mt-1">Reconcile faster & automate notices</p>
 
                   <!-- Price -->
                   <div class="mt-6 mb-6 flex items-center gap-2.5">
-                    <span id="price-display-PRO" class="text-4xl font-bold text-stone-900 tracking-tight">₹399</span>
-                    <div class="text-[11px] leading-tight text-stone-500">
-                      <span id="unit-label-PRO" class="block font-medium text-stone-700">INR / month</span>
+                    <span id="price-display-PRO" class="text-4xl font-bold text-stone-900 dark:text-white tracking-tight">₹399</span>
+                    <div class="text-[11px] leading-tight text-stone-500 dark:text-slate-400">
+                      <span id="unit-label-PRO" class="block font-medium text-stone-700 dark:text-slate-300">INR / month</span>
                       <span id="billing-subtext-PRO">billed monthly (includes GST)</span>
                     </div>
                   </div>
 
                   <!-- Dark Primary CTA Button -->
-                  <button id="btn-select-PRO" type="button" onclick="selectSubscriptionPlan('PRO')" class="w-full py-3 px-4 rounded-xl text-sm font-semibold bg-[#18181B] hover:bg-stone-800 text-white shadow-sm transition-all cursor-pointer">
+                  <button id="btn-select-PRO" type="button" onclick="selectSubscriptionPlan('PRO')" class="w-full py-3 px-4 rounded-xl text-sm font-semibold bg-[#18181B] dark:bg-indigo-600 hover:bg-stone-800 dark:hover:bg-indigo-500 text-white shadow-sm transition-all cursor-pointer">
                     Get Pro plan
                   </button>
-                  <p class="text-[11px] text-center text-stone-500 mt-2">No commitment · Cancel anytime</p>
+                  <p class="text-[11px] text-center text-stone-500 dark:text-slate-400 mt-2">No commitment · Cancel anytime</p>
 
-                  <hr class="my-5 border-stone-200/80" />
+                  <hr class="my-5 border-stone-200/80 dark:border-slate-800" />
 
-                  <p class="text-xs font-semibold text-stone-900 mb-3">Everything in Free and:</p>
-                  <ul class="space-y-3 text-sm text-stone-700">
+                  <p class="text-xs font-semibold text-stone-900 dark:text-white mb-3">Everything in Free and:</p>
+                  <ul class="space-y-3 text-sm text-stone-700 dark:text-slate-300">
                     <li class="flex items-start gap-2.5">
-                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 dark:text-indigo-400 shrink-0 mt-0.5"></i>
                       <span id="feat-quota-PRO">Generate & compare up to <strong>100 bills / month</strong></span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 dark:text-indigo-400 shrink-0 mt-0.5"></i>
                       <span>Automated <strong>Rectification Mail Drafts</strong> for vendors</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 dark:text-indigo-400 shrink-0 mt-0.5"></i>
                       <span>Direct <strong>GST Portal Filing</strong> helper & GSTR-3B readiness</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 dark:text-indigo-400 shrink-0 mt-0.5"></i>
                       <span>Bulk Vendor CSV import & discrepancy audit exports</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 dark:text-indigo-400 shrink-0 mt-0.5"></i>
                       <span>Priority ITC mismatch alerts</span>
                     </li>
                   </ul>
@@ -839,10 +895,10 @@
               </div>
 
               <!-- CARD 3: MAX & ENTERPRISE (Recommended) -->
-              <div id="plan-card-MAX" class="bg-gradient-to-b from-[#F4F5FB] to-white rounded-2xl border border-indigo-200/90 p-7 flex flex-col justify-between shadow-md transition-all">
+              <div id="plan-card-MAX" class="bg-gradient-to-b from-[#F4F5FB] to-white dark:from-indigo-950/40 dark:to-slate-900 rounded-2xl border border-indigo-200/90 dark:border-indigo-800/70 p-7 flex flex-col justify-between shadow-md transition-all">
                 <div>
                   <!-- Flourishing Multi-Node Botanical SVG -->
-                  <div class="w-12 h-12 mb-5 text-stone-800">
+                  <div class="w-12 h-12 mb-5 text-stone-800 dark:text-indigo-300">
                     <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="w-11 h-11">
                       <circle cx="24" cy="9" r="4" />
                       <circle cx="13" cy="16" r="3.5" />
@@ -860,46 +916,46 @@
                   </div>
 
                   <div class="flex flex-wrap items-center gap-2">
-                    <h3 id="title-plan-MAX" class="text-2xl font-bold text-stone-900 tracking-tight">Max & Enterprise</h3>
-                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-100 text-indigo-700">Recommended</span>
-                    <span id="badge-active-MAX" class="hidden px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">Active Plan</span>
+                    <h3 id="title-plan-MAX" class="text-2xl font-bold text-stone-900 dark:text-white tracking-tight">Max & Enterprise</h3>
+                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">Recommended</span>
+                    <span id="badge-active-MAX" class="hidden px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">Active Plan</span>
                   </div>
-                  <p id="desc-plan-MAX" class="text-sm text-stone-500 mt-1">Unlimited bills, risk intelligence & full suite</p>
+                  <p id="desc-plan-MAX" class="text-sm text-stone-500 dark:text-slate-400 mt-1">Unlimited bills, risk intelligence & full suite</p>
 
                   <!-- Price -->
                   <div class="mt-6 mb-6">
                     <div class="flex items-baseline gap-1.5">
-                      <span id="price-display-MAX" class="text-4xl font-bold text-stone-900 tracking-tight">₹599</span>
+                      <span id="price-display-MAX" class="text-4xl font-bold text-stone-900 dark:text-white tracking-tight">₹599</span>
                     </div>
-                    <div class="text-[11px] leading-tight text-stone-500 mt-1">
-                      <span id="unit-label-MAX" class="font-medium text-stone-700">INR / month</span> · <span id="billing-subtext-MAX">billed monthly (includes GST)</span>
+                    <div class="text-[11px] leading-tight text-stone-500 dark:text-slate-400 mt-1">
+                      <span id="unit-label-MAX" class="font-medium text-stone-700 dark:text-slate-300">INR / month</span> · <span id="billing-subtext-MAX">billed monthly (includes GST)</span>
                     </div>
                   </div>
 
                   <!-- Dark Primary CTA Button -->
-                  <button id="btn-select-MAX" type="button" onclick="selectSubscriptionPlan('MAX')" class="w-full py-3 px-4 rounded-xl text-sm font-semibold bg-[#18181B] hover:bg-stone-800 text-white shadow-sm transition-all cursor-pointer">
+                  <button id="btn-select-MAX" type="button" onclick="selectSubscriptionPlan('MAX')" class="w-full py-3 px-4 rounded-xl text-sm font-semibold bg-[#18181B] dark:bg-indigo-600 hover:bg-stone-800 dark:hover:bg-indigo-500 text-white shadow-sm transition-all cursor-pointer">
                     Get Max plan
                   </button>
-                  <p class="text-[11px] text-center text-stone-500 mt-2">No commitment · Cancel anytime</p>
+                  <p class="text-[11px] text-center text-stone-500 dark:text-slate-400 mt-2">No commitment · Cancel anytime</p>
 
-                  <hr class="my-5 border-stone-200/80" />
+                  <hr class="my-5 border-stone-200/80 dark:border-slate-800" />
 
-                  <p class="text-xs font-semibold text-stone-900 mb-3">Everything in Pro, plus:</p>
-                  <ul class="space-y-3 text-sm text-stone-700">
+                  <p class="text-xs font-semibold text-stone-900 dark:text-white mb-3">Everything in Pro, plus:</p>
+                  <ul class="space-y-3 text-sm text-stone-700 dark:text-slate-300">
                     <li class="flex items-start gap-2.5">
-                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 dark:text-indigo-400 shrink-0 mt-0.5"></i>
                       <span id="feat-quota-MAX"><strong>Unlimited bills</strong> generation & reconciliation</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 dark:text-indigo-400 shrink-0 mt-0.5"></i>
                       <span>Full <strong>Vendor Risk Analysis & Directory</strong> scoring</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 dark:text-indigo-400 shrink-0 mt-0.5"></i>
                       <span>One-click bulk vendor discrepancy resolution notices</span>
                     </li>
                     <li class="flex items-start gap-2.5">
-                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 dark:text-indigo-400 shrink-0 mt-0.5"></i>
                       <span id="feat-extra-MAX">All current & upcoming TaxSync GST compliance tools</span>
                     </li>
                   </ul>
@@ -909,7 +965,7 @@
             </div>
 
             <!-- Footnote -->
-            <div class="mt-10 text-center max-w-2xl mx-auto text-[11px] leading-relaxed text-stone-500 space-y-1">
+            <div class="mt-10 text-center max-w-2xl mx-auto text-[11px] leading-relaxed text-stone-500 dark:text-slate-400 space-y-1">
               <p>*Monthly bill generation and comparison quotas reset on the 1st of each calendar month. Prices are in INR and inclusive of applicable GST.</p>
               <p>Upgrade or downgrade anytime with zero lock-in. Your existing GST invoices and taxpayer records remain preserved across plan changes.</p>
             </div>
@@ -924,10 +980,10 @@
   <!-- =====================================================================
        MODAL 1: RECTIFICATION EMAIL DRAFT MODAL
   ====================================================================== -->
-  <div id="email-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4">
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[92vh]">
+  <div id="email-modal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[92vh]">
       <!-- Modal Header -->
-      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
         <div class="flex items-center gap-2.5">
           <div class="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center">
             <i data-lucide="mail-warning" class="w-4 h-4 text-white"></i>
@@ -945,40 +1001,40 @@
       <!-- Modal Body -->
       <div class="p-6 space-y-4 overflow-y-auto flex-1">
         <!-- Multi-vendor warning & switcher -->
-        <div id="multi-vendor-warning" class="hidden p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-2">
+        <div id="multi-vendor-warning" class="hidden p-3 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/70 text-xs text-amber-900 dark:text-amber-200 space-y-2">
           <p class="font-semibold">Multiple vendors selected. Switch below to review each vendor's separate rectification draft:</p>
           <div id="vendor-switcher-bar" class="hidden flex flex-wrap gap-2"></div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">To (Vendor Email)</label>
-            <input type="email" id="draft-email-to" class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800" />
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">To (Vendor Email)</label>
+            <input type="email" id="draft-email-to" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium text-slate-800 dark:text-white" />
           </div>
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">CC (Our GST Compliance Team)</label>
-            <input type="text" id="draft-email-cc" value="gst.compliance@apexenterprise.in" class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-600" />
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">CC (Our GST Compliance Team)</label>
+            <input type="text" id="draft-email-cc" value="gst.compliance@apexenterprise.in" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-600 dark:text-slate-300" />
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Subject</label>
-          <input type="text" id="draft-email-subject" class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900" />
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Subject</label>
+          <input type="text" id="draft-email-subject" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-semibold text-slate-900 dark:text-white" />
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Email Body (Editable)</label>
-          <textarea id="draft-email-body" rows="11" class="w-full p-3.5 text-xs font-mono leading-relaxed bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></textarea>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Email Body (Editable)</label>
+          <textarea id="draft-email-body" rows="11" class="w-full p-3.5 text-xs font-mono leading-relaxed bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></textarea>
         </div>
       </div>
 
       <!-- Modal Footer -->
-      <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
-        <button type="button" onclick="closeModal('email-modal')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200 transition-all">
+      <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+        <button type="button" onclick="closeModal('email-modal')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
           Close
         </button>
         <div class="flex flex-wrap items-center gap-2.5">
-          <button type="button" onclick="copyDraftEmailToClipboard()" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 shadow-sm transition-all">
+          <button type="button" onclick="copyDraftEmailToClipboard()" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-white border border-slate-300 dark:border-slate-600 shadow-sm transition-all">
             <i data-lucide="copy" class="w-4 h-4"></i>
             Copy Email Draft
           </button>
@@ -994,21 +1050,22 @@
   <!-- =====================================================================
        MODAL 2: PRINTABLE GST TAX INVOICE PREVIEW MODAL
   ====================================================================== -->
-  <div id="invoice-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4">
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-3xl w-full overflow-hidden flex flex-col max-h-[92vh]">
-      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between no-print">
+  <div id="invoice-modal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-3xl w-full overflow-hidden flex flex-col max-h-[92vh]">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between no-print border-b border-slate-800">
         <h3 class="text-base font-bold">GST Tax Invoice Preview</h3>
         <button type="button" onclick="closeModal('invoice-modal')" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
-      <div id="printable-invoice-area" class="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1 bg-white">
+      <!-- Always keep printable invoice sheet white/high-contrast for accurate PDF print -->
+      <div id="printable-invoice-area" class="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1 bg-white text-slate-900">
         <!-- Populated dynamically -->
       </div>
-      <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3 no-print">
-        <button type="button" onclick="closeModal('invoice-modal')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200">Close</button>
+      <div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 no-print">
+        <button type="button" onclick="closeModal('invoice-modal')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700">Close</button>
         <div class="flex items-center gap-2.5">
-          <button id="btn-download-single-json" type="button" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-white hover:bg-slate-100 text-slate-800 border border-slate-300">
+          <button id="btn-download-single-json" type="button" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-white border border-slate-300 dark:border-slate-600">
             <i data-lucide="file-code" class="w-4 h-4"></i>
             E-Invoice JSON
           </button>
@@ -1024,8 +1081,8 @@
   <!-- =====================================================================
        MODAL 3: OFFICIAL GST PORTAL FILING HELPER MODAL
   ====================================================================== -->
-  <div id="portal-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4">
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full overflow-hidden">
+  <div id="portal-modal" class="fixed inset-0 z-50 hidden bg-slate-900/70 backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-md w-full overflow-hidden">
       <div class="px-6 py-4 bg-emerald-900 text-white flex items-center justify-between">
         <h3 class="text-base font-bold">GSTR-3B / GSTR-1 Filing Ready</h3>
         <button type="button" onclick="closeModal('portal-modal')" class="p-1 rounded-lg text-emerald-300 hover:text-white">
@@ -1041,8 +1098,8 @@
   <!-- =====================================================================
        MODAL 5: FEATURE / QUOTA UPGRADE PROMPT MODAL
   ====================================================================== -->
-  <div id="upgradePromptModal" class="fixed inset-0 z-[65] hidden bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4">
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full overflow-hidden">
+  <div id="upgradePromptModal" class="fixed inset-0 z-[65] hidden bg-slate-900/70 backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-md w-full overflow-hidden">
       <div class="px-6 py-5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-start justify-between gap-3">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-300 shrink-0">
@@ -1058,17 +1115,17 @@
         </button>
       </div>
       <div class="p-6 space-y-4">
-        <p id="upgrade-modal-desc" class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+        <p id="upgrade-modal-desc" class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
           You have reached your current plan limit. Level up to unlock higher monthly bill quotas, automated mail drafts, GST portal filing, and vendor risk intelligence.
         </p>
-        <div id="upgrade-modal-highlight" class="p-3.5 rounded-xl bg-indigo-50/80 border border-indigo-100 text-xs text-indigo-950 space-y-1">
+        <div id="upgrade-modal-highlight" class="p-3.5 rounded-xl bg-indigo-50/80 dark:bg-indigo-950/60 border border-indigo-100 dark:border-indigo-800/70 text-xs text-indigo-950 dark:text-indigo-200 space-y-1">
           <!-- Populated dynamically -->
         </div>
         <div class="flex items-center justify-end gap-2.5 pt-2">
-          <button type="button" onclick="closeModal('upgradePromptModal')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">
+          <button type="button" onclick="closeModal('upgradePromptModal')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
             Maybe Later
           </button>
-          <button type="button" onclick="goToLevelUpFromPrompt()" class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold bg-stone-900 hover:bg-stone-800 text-white shadow-sm transition-all cursor-pointer">
+          <button type="button" onclick="goToLevelUpFromPrompt()" class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold bg-stone-900 dark:bg-indigo-600 hover:bg-stone-800 dark:hover:bg-indigo-500 text-white shadow-sm transition-all cursor-pointer">
             <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
             View Plans & Level Up
           </button>
@@ -1090,8 +1147,53 @@
       VENDOR_BILLS: 'taxsync_gst_vendor_bills_v1',
       TAXPAYER_ENTITY: 'taxsync_gst_taxpayer_entity_v1',
       SUBSCRIPTION_PLAN: 'taxsync_gst_plan_v1',
-      SUBSCRIPTION_SEGMENT: 'taxsync_gst_segment_v1'
+      SUBSCRIPTION_SEGMENT: 'taxsync_gst_segment_v1',
+      THEME: 'taxsync_gst_theme_v1'
     };
+
+    // -------------------------------------------------------------------------
+    // 1A. DARK MODE & BACK TO TOP CONTROLLERS
+    // -------------------------------------------------------------------------
+    function toggleDarkMode() {
+      const root = document.documentElement;
+      const isDark = root.classList.toggle('dark');
+      try {
+        localStorage.setItem(STORAGE_KEYS.THEME, isDark ? 'dark' : 'light');
+      } catch (e) {}
+      refreshIcons();
+    }
+
+    function setupBackToTop() {
+      const btn = document.getElementById('back-to-top-btn');
+      if (!btn) return;
+
+      const toggleVisibility = () => {
+        if (window.scrollY > 280) {
+          btn.classList.remove('hidden');
+          btn.classList.add('flex');
+          requestAnimationFrame(() => {
+            btn.classList.remove('opacity-0', 'translate-y-3');
+            btn.classList.add('opacity-100', 'translate-y-0');
+          });
+        } else {
+          btn.classList.add('opacity-0', 'translate-y-3');
+          btn.classList.remove('opacity-100', 'translate-y-0');
+          setTimeout(() => {
+            if (window.scrollY <= 280) {
+              btn.classList.add('hidden');
+              btn.classList.remove('flex');
+            }
+          }, 250);
+        }
+      };
+
+      window.addEventListener('scroll', toggleVisibility, { passive: true });
+      toggleVisibility();
+    }
+
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 
     // Segment-differentiated pricing (Hiked CA Firms & Enterprise rates)
     const SEGMENT_PRICING = {
@@ -1449,6 +1551,7 @@
       loadDefaultStagedVendorCSV();
       setupFilters();
       setupModalDismissHandlers();
+      setupBackToTop();
       runReconciliation();
       refreshIcons();
     });
@@ -1575,15 +1678,15 @@
       const maxTier = getSegmentTierData('MAX');
 
       if (cycle === 'yearly') {
-        btnYearly.className = 'px-2.5 py-1 rounded-full font-semibold bg-white text-indigo-700 shadow-xs transition-all cursor-pointer';
-        btnMonthly.className = 'px-2.5 py-1 rounded-full font-medium text-stone-600 hover:text-stone-900 transition-all cursor-pointer';
+        btnYearly.className = 'px-2.5 py-1 rounded-full font-semibold bg-white dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 shadow-xs transition-all cursor-pointer';
+        btnMonthly.className = 'px-2.5 py-1 rounded-full font-medium text-stone-600 dark:text-slate-300 hover:text-stone-900 dark:hover:text-white transition-all cursor-pointer';
         pricePro.textContent = `₹${proTier.yearlyMonthlyPrice.toLocaleString('en-IN')}`;
         subPro.textContent = `billed yearly at ₹${proTier.yearlyTotal.toLocaleString('en-IN')} (save 17%)`;
         priceMax.textContent = `₹${maxTier.yearlyMonthlyPrice.toLocaleString('en-IN')}`;
         subMax.textContent = `billed yearly at ₹${maxTier.yearlyTotal.toLocaleString('en-IN')} (save 17%)`;
       } else {
-        btnMonthly.className = 'px-2.5 py-1 rounded-full font-semibold bg-white text-stone-900 shadow-xs transition-all cursor-pointer';
-        btnYearly.className = 'px-2.5 py-1 rounded-full font-medium text-indigo-600 hover:text-indigo-700 transition-all cursor-pointer';
+        btnMonthly.className = 'px-2.5 py-1 rounded-full font-semibold bg-white dark:bg-slate-700 text-stone-900 dark:text-white shadow-xs transition-all cursor-pointer';
+        btnYearly.className = 'px-2.5 py-1 rounded-full font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 transition-all cursor-pointer';
         pricePro.textContent = `₹${proTier.monthlyPrice.toLocaleString('en-IN')}`;
         subPro.textContent = 'billed monthly (includes GST)';
         priceMax.textContent = `₹${maxTier.monthlyPrice.toLocaleString('en-IN')}`;
@@ -1600,11 +1703,11 @@
       const btnEnt = document.getElementById('seg-enterprise');
 
       if (seg === 'enterprise') {
-        btnEnt.className = 'px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white text-stone-900 shadow-sm transition-all cursor-pointer';
-        btnInd.className = 'px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-stone-600 hover:text-stone-900 transition-all cursor-pointer';
+        btnEnt.className = 'px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white dark:bg-slate-700 text-stone-900 dark:text-white shadow-sm transition-all cursor-pointer';
+        btnInd.className = 'px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-stone-600 dark:text-slate-300 hover:text-stone-900 dark:hover:text-white transition-all cursor-pointer';
       } else {
-        btnInd.className = 'px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white text-stone-900 shadow-sm transition-all cursor-pointer';
-        btnEnt.className = 'px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-stone-600 hover:text-stone-900 transition-all cursor-pointer';
+        btnInd.className = 'px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white dark:bg-slate-700 text-stone-900 dark:text-white shadow-sm transition-all cursor-pointer';
+        btnEnt.className = 'px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-stone-600 dark:text-slate-300 hover:text-stone-900 dark:hover:text-white transition-all cursor-pointer';
       }
 
       const freeTier = getSegmentTierData('FREE', seg);
@@ -1623,7 +1726,6 @@
       document.getElementById('feat-quota-MAX').innerHTML = maxTier.quotaLabel;
       document.getElementById('feat-extra-MAX').textContent = maxTier.extraFeature;
 
-      // Refresh displayed monthly/yearly numbers and active plan pills
       setBillingCycle(levelUpBillingCycle);
       applySubscriptionPlanToUI();
     }
@@ -1633,7 +1735,6 @@
       const used = getMonthlyBillUsageCount();
       const limitLabel = plan.billLimit === Infinity ? 'Unlimited' : plan.billLimit;
 
-      // Sidebar & Header badges
       const sidebarBadge = document.getElementById('sidebar-plan-badge');
       if (sidebarBadge) sidebarBadge.textContent = plan.id;
 
@@ -1658,14 +1759,12 @@
       const planSummary = document.getElementById('sidebar-plan-summary');
       if (planSummary) planSummary.textContent = plan.summaryText;
 
-      // Vendor Risk nav lock badge
       const vendorLockBadge = document.getElementById('nav-vendor-lock-badge');
       if (vendorLockBadge) {
         if (plan.hasRiskAnalysis) vendorLockBadge.classList.add('hidden');
         else vendorLockBadge.classList.remove('hidden');
       }
 
-      // Level Up page active state indicators
       const currentPill = document.getElementById('levelup-current-pill');
       if (currentPill) {
         currentPill.textContent = `${plan.name} (₹${plan.monthlyPrice.toLocaleString('en-IN')}/mo)`;
@@ -1684,25 +1783,25 @@
 
         if (card) {
           if (isCurrent) {
-            card.classList.add('ring-2', 'ring-stone-900');
+            card.classList.add('ring-2', 'ring-stone-900', 'dark:ring-indigo-400');
           } else {
-            card.classList.remove('ring-2', 'ring-stone-900');
+            card.classList.remove('ring-2', 'ring-stone-900', 'dark:ring-indigo-400');
           }
         }
 
         if (btn) {
           if (isCurrent) {
             btn.textContent = 'Current Active Plan';
-            btn.className = 'w-full py-3 px-4 rounded-xl text-sm font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 cursor-default';
+            btn.className = 'w-full py-3 px-4 rounded-xl text-sm font-semibold bg-emerald-50 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 cursor-default';
           } else if (pid === 'FREE') {
             btn.textContent = 'Use TaxSync for free';
-            btn.className = 'w-full py-3 px-4 rounded-xl text-sm font-semibold bg-stone-100 hover:bg-stone-200 text-stone-900 border border-stone-200/80 transition-all cursor-pointer';
+            btn.className = 'w-full py-3 px-4 rounded-xl text-sm font-semibold bg-stone-100 dark:bg-slate-800 hover:bg-stone-200 dark:hover:bg-slate-700 text-stone-900 dark:text-white border border-stone-200/80 dark:border-slate-700 transition-all cursor-pointer';
           } else if (pid === 'PRO') {
             btn.textContent = levelUpSegment === 'enterprise' ? 'Get CA Practice Pro' : 'Get Pro plan';
-            btn.className = 'w-full py-3 px-4 rounded-xl text-sm font-semibold bg-[#18181B] hover:bg-stone-800 text-white shadow-sm transition-all cursor-pointer';
+            btn.className = 'w-full py-3 px-4 rounded-xl text-sm font-semibold bg-[#18181B] dark:bg-indigo-600 hover:bg-stone-800 dark:hover:bg-indigo-500 text-white shadow-sm transition-all cursor-pointer';
           } else {
             btn.textContent = levelUpSegment === 'enterprise' ? 'Get CA Firm & Enterprise' : 'Get Max plan';
-            btn.className = 'w-full py-3 px-4 rounded-xl text-sm font-semibold bg-[#18181B] hover:bg-stone-800 text-white shadow-sm transition-all cursor-pointer';
+            btn.className = 'w-full py-3 px-4 rounded-xl text-sm font-semibold bg-[#18181B] dark:bg-indigo-600 hover:bg-stone-800 dark:hover:bg-indigo-500 text-white shadow-sm transition-all cursor-pointer';
           }
         }
       });
@@ -1735,9 +1834,9 @@
 
       const wrapper = document.createElement('div');
       wrapper.innerHTML = `
-        <div id="entityModal" class="fixed inset-0 z-[60] hidden bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4">
-          <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[92vh]">
-            <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <div id="entityModal" class="fixed inset-0 z-[60] hidden bg-slate-900/70 backdrop-blur-sm items-center justify-center p-4">
+          <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[92vh]">
+            <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
               <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center">
                   <i data-lucide="building-2" class="w-4 h-4 text-white"></i>
@@ -1754,21 +1853,21 @@
             <form id="taxpayer-entity-form" class="p-6 space-y-4 overflow-y-auto flex-1">
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-xs font-semibold text-slate-700 mb-1">Legal Name (As per GST Certificate) *</label>
-                  <input type="text" id="entityLegalName" required class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl" />
+                  <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Legal Name (As per GST Certificate) *</label>
+                  <input type="text" id="entityLegalName" required class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white" />
                 </div>
                 <div>
-                  <label class="block text-xs font-semibold text-slate-700 mb-1">Trade Name *</label>
-                  <input type="text" id="entityTradeName" required class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl" />
+                  <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Trade Name *</label>
+                  <input type="text" id="entityTradeName" required class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white" />
                 </div>
                 <div>
-                  <label class="block text-xs font-semibold text-slate-700 mb-1">Taxpayer GSTIN (15-Character) *</label>
-                  <input type="text" id="entityGstin" required maxlength="15" class="w-full px-3.5 py-2 text-sm uppercase font-mono bg-slate-50 border border-slate-200 rounded-xl" />
+                  <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Taxpayer GSTIN (15-Character) *</label>
+                  <input type="text" id="entityGstin" required maxlength="15" class="w-full px-3.5 py-2 text-sm uppercase font-mono bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white" />
                   <p id="entity-gstin-hint" class="text-[11px] text-slate-400 mt-1">State code auto-syncs from first 2 digits</p>
                 </div>
                 <div>
-                  <label class="block text-xs font-semibold text-slate-700 mb-1">State / Place of Supply Code *</label>
-                  <select id="entityState" class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl">
+                  <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">State / Place of Supply Code *</label>
+                  <select id="entityState" class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white">
                     <option value="07-Delhi">07 - Delhi</option>
                     <option value="09-Uttar Pradesh">09 - Uttar Pradesh</option>
                     <option value="19-West Bengal">19 - West Bengal</option>
@@ -1781,28 +1880,28 @@
                   </select>
                 </div>
                 <div>
-                  <label class="block text-xs font-semibold text-slate-700 mb-1">Authorized Signatory *</label>
-                  <input type="text" id="entitySignatory" required class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl" />
+                  <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Authorized Signatory *</label>
+                  <input type="text" id="entitySignatory" required class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white" />
                 </div>
                 <div>
-                  <label class="block text-xs font-semibold text-slate-700 mb-1">Financial Year</label>
-                  <input type="text" id="entityFy" required class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl" />
+                  <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Financial Year</label>
+                  <input type="text" id="entityFy" required class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white" />
                 </div>
                 <div>
-                  <label class="block text-xs font-semibold text-slate-700 mb-1">Compliance Email *</label>
-                  <input type="email" id="entityEmail" required class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl" />
+                  <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Compliance Email *</label>
+                  <input type="email" id="entityEmail" required class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white" />
                 </div>
                 <div>
-                  <label class="block text-xs font-semibold text-slate-700 mb-1">Contact Phone *</label>
-                  <input type="text" id="entityPhone" required class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl" />
+                  <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Contact Phone *</label>
+                  <input type="text" id="entityPhone" required class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white" />
                 </div>
               </div>
               <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1">Registered Principal Place of Business Address *</label>
-                <textarea id="entityAddress" rows="2" required class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl"></textarea>
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Registered Principal Place of Business Address *</label>
+                <textarea id="entityAddress" rows="2" required class="w-full px-3.5 py-2 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white"></textarea>
               </div>
-              <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
-                <button type="button" onclick="closeModal('entityModal')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">Cancel</button>
+              <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-2.5">
+                <button type="button" onclick="closeModal('entityModal')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">Cancel</button>
                 <button type="submit" class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm">Save Taxpayer Profile</button>
               </div>
             </form>
@@ -1838,10 +1937,10 @@
             hint.className = 'text-[11px] text-slate-400 mt-1';
           } else if (gstinRegex.test(val)) {
             hint.textContent = `✓ Valid 15-char GSTIN • State Code ${val.slice(0, 2)} synced`;
-            hint.className = 'text-[11px] text-emerald-600 font-medium mt-1';
+            hint.className = 'text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-1';
           } else {
             hint.textContent = `Must match 15-char GSTIN format (${val.length}/15 chars)`;
-            hint.className = 'text-[11px] text-amber-600 mt-1';
+            hint.className = 'text-[11px] text-amber-600 dark:text-amber-400 mt-1';
           }
         });
 
@@ -2242,10 +2341,10 @@
         const vRisk = vendorRiskMap[rec.vendorName]?.riskLevel || 'Low Risk';
 
         return `
-          <tr class="hover:bg-slate-50/90 transition-colors ${isChecked ? 'bg-indigo-50/40' : ''}">
+          <tr class="hover:bg-slate-50/90 dark:hover:bg-slate-800/60 transition-colors ${isChecked ? 'bg-indigo-50/40 dark:bg-indigo-950/30' : ''}">
             <td class="py-3.5 pl-4 pr-2 align-top">
               ${!isMatched ? `
-                <input type="checkbox" data-key="${rec.key}" ${isChecked ? 'checked' : ''} onchange="toggleDiscrepancySelection('${rec.key}')" class="discrepancy-checkbox w-4 h-4 mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
+                <input type="checkbox" data-key="${rec.key}" ${isChecked ? 'checked' : ''} onchange="toggleDiscrepancySelection('${rec.key}')" class="discrepancy-checkbox w-4 h-4 mt-1 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
               ` : `
                 <span class="inline-flex items-center justify-center w-4 h-4 mt-1 text-emerald-500" title="No discrepancy">
                   <i data-lucide="check" class="w-4 h-4"></i>
@@ -2253,40 +2352,40 @@
               `}
             </td>
             <td class="py-3.5 px-3 align-top">
-              <div class="font-mono font-bold text-slate-900 text-xs sm:text-sm">${escapeHtml(rec.invoiceNo)}</div>
-              <div class="text-xs text-slate-500 mt-0.5">${escapeHtml(rec.invoiceDate)}</div>
+              <div class="font-mono font-bold text-slate-900 dark:text-white text-xs sm:text-sm">${escapeHtml(rec.invoiceNo)}</div>
+              <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">${escapeHtml(rec.invoiceDate)}</div>
             </td>
             <td class="py-3.5 px-3 align-top">
-              <div class="font-semibold text-slate-900 text-xs sm:text-sm">${escapeHtml(rec.vendorName)}</div>
+              <div class="font-semibold text-slate-900 dark:text-slate-100 text-xs sm:text-sm">${escapeHtml(rec.vendorName)}</div>
               <div class="flex flex-wrap items-center gap-1.5 mt-1">
-                <span class="text-[11px] font-mono text-slate-500">${escapeHtml(rec.vendorGstin)}</span>
+                <span class="text-[11px] font-mono text-slate-500 dark:text-slate-400">${escapeHtml(rec.vendorGstin)}</span>
                 ${getActivePlan().hasRiskAnalysis
                   ? renderVendorRiskBadge(vRisk)
-                  : `<button type="button" onclick="promptRiskAnalysisUpgrade()" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 hover:bg-amber-100 text-slate-500 hover:text-amber-800 border border-slate-200 transition-colors cursor-pointer" title="Unlock AI Vendor Risk Analysis in ${maxTier.name} (₹${maxTier.monthlyPrice.toLocaleString('en-IN')}/mo)">🔒 Risk (Max)</button>`
+                  : `<button type="button" onclick="promptRiskAnalysisUpgrade()" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-amber-100 dark:hover:bg-amber-950/70 text-slate-500 dark:text-slate-400 hover:text-amber-800 dark:hover:text-amber-300 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer" title="Unlock AI Vendor Risk Analysis in ${maxTier.name} (₹${maxTier.monthlyPrice.toLocaleString('en-IN')}/mo)">🔒 Risk (Max)</button>`
                 }
               </div>
             </td>
             <td class="py-3.5 px-3 align-top max-w-xs">
               ${renderStatusBadge(rec.status)}
-              <p class="text-[11px] text-slate-500 mt-1 leading-snug">${escapeHtml(rec.issueSummary)}</p>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">${escapeHtml(rec.issueSummary)}</p>
             </td>
             <td class="py-3.5 px-3 align-top">
               ${renderSeverityBadge(rec.severity)}
             </td>
             <td class="py-3.5 px-3 align-top text-right font-mono">
-              <div class="font-semibold text-slate-900 text-xs sm:text-sm">${rec.ourBill ? formatINR(rec.ourTotal) : '—'}</div>
-              <div class="text-[11px] text-slate-500">Tax: ${rec.ourBill ? formatINR(rec.ourTax) : '—'}</div>
+              <div class="font-semibold text-slate-900 dark:text-white text-xs sm:text-sm">${rec.ourBill ? formatINR(rec.ourTotal) : '—'}</div>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400">Tax: ${rec.ourBill ? formatINR(rec.ourTax) : '—'}</div>
             </td>
             <td class="py-3.5 px-3 align-top text-right font-mono">
-              <div class="font-semibold text-slate-900 text-xs sm:text-sm">${rec.vendorBill ? formatINR(rec.vendorTotal) : '—'}</div>
-              <div class="text-[11px] text-slate-500">Tax: ${rec.vendorBill ? formatINR(rec.vendorTax) : '—'}</div>
+              <div class="font-semibold text-slate-900 dark:text-white text-xs sm:text-sm">${rec.vendorBill ? formatINR(rec.vendorTotal) : '—'}</div>
+              <div class="text-[11px] text-slate-500 dark:text-slate-400">Tax: ${rec.vendorBill ? formatINR(rec.vendorTax) : '—'}</div>
             </td>
             <td class="py-3.5 px-3 align-top text-right font-mono">
               ${rec.taxVariance === 0 && rec.totalVariance === 0 ? `
-                <span class="text-xs font-semibold text-emerald-600">₹0.00</span>
+                <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">₹0.00</span>
               ` : `
-                <div class="font-bold text-rose-600 text-xs sm:text-sm">${rec.taxVariance > 0 ? '+' : ''}${formatINR(rec.taxVariance)}</div>
-                <div class="text-[10px] text-rose-500">Tax Diff</div>
+                <div class="font-bold text-rose-600 dark:text-rose-400 text-xs sm:text-sm">${rec.taxVariance > 0 ? '+' : ''}${formatINR(rec.taxVariance)}</div>
+                <div class="text-[10px] text-rose-500 dark:text-rose-400/80">Tax Diff</div>
               `}
             </td>
             <td class="py-3.5 pl-3 pr-4 align-top text-right">
@@ -2296,19 +2395,19 @@
                     File on GST Portal ↗
                   </button>
                 ` : `
-                  <button type="button" onclick="promptGstFilingUpgrade()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-800 border border-slate-200 hover:border-amber-300 transition-all whitespace-nowrap cursor-pointer" title="Available on ${proTier.name} (₹${proTier.monthlyPrice.toLocaleString('en-IN')}/mo)">
+                  <button type="button" onclick="promptGstFilingUpgrade()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/60 text-slate-600 dark:text-slate-300 hover:text-amber-800 dark:hover:text-amber-300 border border-slate-200 dark:border-slate-700 hover:border-amber-300 transition-all whitespace-nowrap cursor-pointer" title="Available on ${proTier.name} (₹${proTier.monthlyPrice.toLocaleString('en-IN')}/mo)">
                     <i data-lucide="lock" class="w-3 h-3"></i>
                     GST Filing (Pro)
                   </button>
                 `
               ) : (
                 getActivePlan().hasMailDraft ? `
-                  <button type="button" onclick="openSingleRectificationEmail('${rec.key}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition-all whitespace-nowrap cursor-pointer">
+                  <button type="button" onclick="openSingleRectificationEmail('${rec.key}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/80 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 transition-all whitespace-nowrap cursor-pointer">
                     <i data-lucide="mail" class="w-3.5 h-3.5"></i>
                     Draft Mail
                   </button>
                 ` : `
-                  <button type="button" onclick="promptMailDraftUpgrade()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-800 border border-slate-200 hover:border-amber-300 transition-all whitespace-nowrap cursor-pointer" title="Available on ${proTier.name} (₹${proTier.monthlyPrice.toLocaleString('en-IN')}/mo)">
+                  <button type="button" onclick="promptMailDraftUpgrade()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-amber-50 dark:hover:bg-amber-950/60 text-slate-600 dark:text-slate-300 hover:text-amber-800 dark:hover:text-amber-300 border border-slate-200 dark:border-slate-700 hover:border-amber-300 transition-all whitespace-nowrap cursor-pointer" title="Available on ${proTier.name} (₹${proTier.monthlyPrice.toLocaleString('en-IN')}/mo)">
                     <i data-lucide="lock" class="w-3 h-3"></i>
                     Draft Mail (Pro)
                   </button>
@@ -2331,7 +2430,11 @@
       grid.innerHTML = vendors.map(v => {
         const isHigh = v.riskLevel === 'High Risk';
         const isMed = v.riskLevel === 'Medium Risk';
-        const borderClass = isHigh ? 'border-rose-200 bg-rose-50/20' : isMed ? 'border-amber-200 bg-amber-50/20' : 'border-slate-200 bg-white';
+        const borderClass = isHigh
+          ? 'border-rose-200 dark:border-rose-800/70 bg-rose-50/20 dark:bg-rose-950/20'
+          : isMed
+            ? 'border-amber-200 dark:border-amber-800/70 bg-amber-50/20 dark:bg-amber-950/20'
+            : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900';
         const accuracy = v.totalBills > 0 ? Math.round((v.matchedBills / v.totalBills) * 100) : 100;
 
         return `
@@ -2339,34 +2442,34 @@
             <div>
               <div class="flex items-start justify-between gap-2">
                 <div>
-                  <h4 class="font-bold text-slate-900 text-base">${escapeHtml(v.vendorName)}</h4>
-                  <p class="text-xs font-mono text-slate-500 mt-0.5">GSTIN: ${escapeHtml(v.vendorGstin)}</p>
+                  <h4 class="font-bold text-slate-900 dark:text-white text-base">${escapeHtml(v.vendorName)}</h4>
+                  <p class="text-xs font-mono text-slate-500 dark:text-slate-400 mt-0.5">GSTIN: ${escapeHtml(v.vendorGstin)}</p>
                 </div>
                 ${renderVendorRiskBadge(v.riskLevel)}
               </div>
 
-              <div class="mt-4 grid grid-cols-3 gap-2 text-center bg-slate-50 rounded-xl p-3 border border-slate-100">
+              <div class="mt-4 grid grid-cols-3 gap-2 text-center bg-slate-50 dark:bg-slate-800/70 rounded-xl p-3 border border-slate-100 dark:border-slate-700/80">
                 <div>
                   <p class="text-[10px] uppercase font-semibold text-slate-400">Total Bills</p>
-                  <p class="text-sm font-bold text-slate-900 mt-0.5">${v.totalBills}</p>
+                  <p class="text-sm font-bold text-slate-900 dark:text-white mt-0.5">${v.totalBills}</p>
                 </div>
                 <div>
                   <p class="text-[10px] uppercase font-semibold text-slate-400">Mismatches</p>
-                  <p class="text-sm font-bold ${v.discrepancyBills > 0 ? 'text-rose-600' : 'text-emerald-600'} mt-0.5">${v.discrepancyBills}</p>
+                  <p class="text-sm font-bold ${v.discrepancyBills > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'} mt-0.5">${v.discrepancyBills}</p>
                 </div>
                 <div>
                   <p class="text-[10px] uppercase font-semibold text-slate-400">Compliance</p>
-                  <p class="text-sm font-bold text-slate-900 mt-0.5">${accuracy}%</p>
+                  <p class="text-sm font-bold text-slate-900 dark:text-white mt-0.5">${accuracy}%</p>
                 </div>
               </div>
 
               <div class="mt-3 flex items-center justify-between text-xs">
-                <span class="text-slate-500">Tax / ITC at Risk:</span>
-                <span class="font-mono font-bold ${v.taxAtRisk > 0 ? 'text-rose-600' : 'text-emerald-600'}">${formatINR(v.taxAtRisk)}</span>
+                <span class="text-slate-500 dark:text-slate-400">Tax / ITC at Risk:</span>
+                <span class="font-mono font-bold ${v.taxAtRisk > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">${formatINR(v.taxAtRisk)}</span>
               </div>
             </div>
 
-            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
               <span class="text-[11px] text-slate-400 truncate">${escapeHtml(v.vendorEmail)}</span>
               ${v.discrepancyBills > 0 ? `
                 <button type="button" onclick="selectAllDiscrepanciesForVendor('${escapeHtml(v.vendorName)}')" class="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white">
@@ -2374,7 +2477,7 @@
                   Resolve (${v.discrepancyBills})
                 </button>
               ` : `
-                <span class="text-xs font-semibold text-emerald-600 flex items-center gap-1">
+                <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                   <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Verified
                 </span>
               `}
@@ -2453,7 +2556,7 @@
         multiWarning.classList.remove('hidden');
         switcherBar.classList.remove('hidden');
         switcherBar.innerHTML = vendorNames.map((vName, idx) => `
-          <button type="button" onclick="populateEmailDraftForVendor('${escapeHtml(vName)}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold ${idx === 0 ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+          <button type="button" onclick="populateEmailDraftForVendor('${escapeHtml(vName)}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold ${idx === 0 ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'}">
             ${escapeHtml(vName)} (${byVendor[vName].length})
           </button>
         `).join('');
@@ -2563,22 +2666,22 @@ Email: ${OUR_ENTITY.email} | Phone: ${OUR_ENTITY.phone || 'N/A'}`;
 
       const body = document.getElementById('portal-modal-body');
       body.innerHTML = `
-        <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 space-y-2">
+        <div class="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 space-y-2">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold uppercase tracking-wider text-emerald-700">100% Reconciled Invoice</span>
-            <span class="font-mono text-xs font-bold text-emerald-900">${escapeHtml(rec.invoiceNo)}</span>
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">100% Reconciled Invoice</span>
+            <span class="font-mono text-xs font-bold text-emerald-900 dark:text-emerald-200">${escapeHtml(rec.invoiceNo)}</span>
           </div>
-          <p class="text-xs text-emerald-800">Both your ledger and <strong>${escapeHtml(rec.vendorName)}</strong> (${escapeHtml(rec.vendorGstin)}) match on taxable amount, GST tax, and date.</p>
-          <div class="pt-2 border-t border-emerald-200/80 grid grid-cols-2 gap-2 text-xs">
-            <div><span class="text-emerald-700">Verified ITC:</span> <strong class="font-mono">${formatINR(rec.ourTax)}</strong></div>
-            <div><span class="text-emerald-700">Invoice Total:</span> <strong class="font-mono">${formatINR(rec.ourTotal)}</strong></div>
+          <p class="text-xs text-emerald-800 dark:text-emerald-300">Both your ledger and <strong>${escapeHtml(rec.vendorName)}</strong> (${escapeHtml(rec.vendorGstin)}) match on taxable amount, GST tax, and date.</p>
+          <div class="pt-2 border-t border-emerald-200/80 dark:border-emerald-800 grid grid-cols-2 gap-2 text-xs text-emerald-900 dark:text-emerald-200">
+            <div><span class="text-emerald-700 dark:text-emerald-400">Verified ITC:</span> <strong class="font-mono">${formatINR(rec.ourTax)}</strong></div>
+            <div><span class="text-emerald-700 dark:text-emerald-400">Invoice Total:</span> <strong class="font-mono">${formatINR(rec.ourTotal)}</strong></div>
           </div>
         </div>
-        <p class="text-xs text-slate-600 leading-relaxed">
+        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
           You can now proceed directly to the official Goods and Services Tax (GST) Government Portal to file your GSTR-3B / GSTR-1 return with zero ITC mismatch risk.
         </p>
         <div class="flex items-center justify-end gap-2.5 pt-2">
-          <button type="button" onclick="closeModal('portal-modal')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">Cancel</button>
+          <button type="button" onclick="closeModal('portal-modal')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">Cancel</button>
           <a href="https://www.gst.gov.in/" target="_blank" rel="noopener noreferrer" onclick="closeModal('portal-modal')" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm">
             Proceed to gst.gov.in ↗
           </a>
@@ -2595,7 +2698,7 @@ Email: ${OUR_ENTITY.email} | Phone: ${OUR_ENTITY.phone || 'N/A'}`;
         description: 'Generate ready-to-send GST discrepancy notices with itemized tax variance breakdowns and one-click email launch on Pro or Max.',
         highlightHtml: `
           <div class="font-semibold">Recommended: ${proTier.name} — ₹${proTier.monthlyPrice.toLocaleString('en-IN')} / month</div>
-          <div class="text-indigo-800">Includes higher monthly bill limits, automated rectification mail drafts, and direct GST Portal filing.</div>
+          <div class="text-indigo-800 dark:text-indigo-300">Includes higher monthly bill limits, automated rectification mail drafts, and direct GST Portal filing.</div>
         `
       });
     }
@@ -2608,7 +2711,7 @@ Email: ${OUR_ENTITY.email} | Phone: ${OUR_ENTITY.phone || 'N/A'}`;
         description: 'Verify GSTR-3B / GSTR-1 filing readiness and launch directly into the official GST portal on Pro or Max.',
         highlightHtml: `
           <div class="font-semibold">Recommended: ${proTier.name} — ₹${proTier.monthlyPrice.toLocaleString('en-IN')} / month</div>
-          <div class="text-indigo-800">Includes higher monthly bill limits, direct GST filing helper, and automated vendor email drafts.</div>
+          <div class="text-indigo-800 dark:text-indigo-300">Includes higher monthly bill limits, direct GST filing helper, and automated vendor email drafts.</div>
         `
       });
     }
@@ -2621,7 +2724,7 @@ Email: ${OUR_ENTITY.email} | Phone: ${OUR_ENTITY.phone || 'N/A'}`;
         description: 'Identify high-risk suppliers, track ITC exposure by vendor, and resolve bulk discrepancies in one click with Max & Enterprise.',
         highlightHtml: `
           <div class="font-semibold">${maxTier.name} — ₹${maxTier.monthlyPrice.toLocaleString('en-IN')} / month</div>
-          <div class="text-indigo-800">Includes unlimited bills, full vendor risk intelligence, GST filing, mail drafts, and all platform features.</div>
+          <div class="text-indigo-800 dark:text-indigo-300">Includes unlimited bills, full vendor risk intelligence, GST filing, mail drafts, and all platform features.</div>
         `
       });
     }
@@ -2636,8 +2739,8 @@ Email: ${OUR_ENTITY.email} | Phone: ${OUR_ENTITY.phone || 'N/A'}`;
         description: `Your ${plan.name} plan allows generating and comparing up to ${plan.billLimit} bills per month (this action would bring usage to ${attemptedTotal} bills).`,
         highlightHtml: `
           <div class="font-semibold">Level Up for More Capacity:</div>
-          <div class="text-indigo-800">• <strong>${proTier.name} (₹${proTier.monthlyPrice.toLocaleString('en-IN')}/mo):</strong> ${levelUpSegment === 'enterprise' ? 'Up to 500 client bills/month' : 'Up to 100 bills/month'} + Mail Drafts & GST Filing</div>
-          <div class="text-indigo-800">• <strong>${maxTier.name} (₹${maxTier.monthlyPrice.toLocaleString('en-IN')}/mo):</strong> Unlimited bills + Vendor Risk Analysis & All Features</div>
+          <div class="text-indigo-800 dark:text-indigo-300">• <strong>${proTier.name} (₹${proTier.monthlyPrice.toLocaleString('en-IN')}/mo):</strong> ${levelUpSegment === 'enterprise' ? 'Up to 500 client bills/month' : 'Up to 100 bills/month'} + Mail Drafts & GST Filing</div>
+          <div class="text-indigo-800 dark:text-indigo-300">• <strong>${maxTier.name} (₹${maxTier.monthlyPrice.toLocaleString('en-IN')}/mo):</strong> Unlimited bills + Vendor Risk Analysis & All Features</div>
         `
       });
     }
@@ -2669,10 +2772,10 @@ Email: ${OUR_ENTITY.email} | Phone: ${OUR_ENTITY.phone || 'N/A'}`;
           hint.className = 'text-[11px] text-slate-400 mt-1';
         } else if (gstinRegex.test(val)) {
           hint.textContent = '✓ Valid 15-character Indian GSTIN structure';
-          hint.className = 'text-[11px] text-emerald-600 font-medium mt-1';
+          hint.className = 'text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-1';
         } else {
           hint.textContent = `Enter valid 15-char GSTIN (${val.length}/15 chars)`;
-          hint.className = 'text-[11px] text-amber-600 mt-1';
+          hint.className = 'text-[11px] text-amber-600 dark:text-amber-400 mt-1';
         }
       });
 
@@ -2742,28 +2845,28 @@ Email: ${OUR_ENTITY.email} | Phone: ${OUR_ENTITY.phone || 'N/A'}`;
       tr.className = 'item-row';
       tr.innerHTML = `
         <td class="p-2">
-          <input type="text" required placeholder="Item / Service Name" value="${escapeHtml(preset.description)}" class="item-desc w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white" />
+          <input type="text" required placeholder="Item / Service Name" value="${escapeHtml(preset.description)}" class="item-desc w-full px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800" />
         </td>
         <td class="p-2">
-          <input type="text" required placeholder="HSN" value="${escapeHtml(preset.hsn)}" class="item-hsn w-full px-2 py-1.5 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg" />
+          <input type="text" required placeholder="HSN" value="${escapeHtml(preset.hsn)}" class="item-hsn w-full px-2 py-1.5 text-xs font-mono bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white" />
         </td>
         <td class="p-2">
-          <input type="number" min="1" step="1" required value="${preset.qty}" class="item-qty w-full px-2 py-1.5 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg" />
+          <input type="number" min="1" step="1" required value="${preset.qty}" class="item-qty w-full px-2 py-1.5 text-xs font-mono bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white" />
         </td>
         <td class="p-2">
-          <input type="number" min="0" step="0.01" required value="${preset.rate}" class="item-rate w-full px-2 py-1.5 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg" />
+          <input type="number" min="0" step="0.01" required value="${preset.rate}" class="item-rate w-full px-2 py-1.5 text-xs font-mono bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white" />
         </td>
         <td class="p-2">
-          <select class="item-gst w-full px-2 py-1.5 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg">
+          <select class="item-gst w-full px-2 py-1.5 text-xs font-mono bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white">
             <option value="5" ${preset.gstRate == 5 ? 'selected' : ''}>5%</option>
             <option value="12" ${preset.gstRate == 12 ? 'selected' : ''}>12%</option>
             <option value="18" ${preset.gstRate == 18 ? 'selected' : ''}>18%</option>
             <option value="28" ${preset.gstRate == 28 ? 'selected' : ''}>28%</option>
           </select>
         </td>
-        <td class="p-2 text-right font-mono text-xs font-semibold text-slate-800 item-row-taxable">₹0.00</td>
+        <td class="p-2 text-right font-mono text-xs font-semibold text-slate-800 dark:text-slate-200 item-row-taxable">₹0.00</td>
         <td class="p-2 text-center">
-          <button type="button" onclick="removeLineItemRow(this)" class="p-1 text-slate-400 hover:text-rose-600 rounded" title="Remove row">
+          <button type="button" onclick="removeLineItemRow(this)" class="p-1 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded" title="Remove row">
             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
           </button>
         </td>
@@ -2881,15 +2984,15 @@ Email: ${OUR_ENTITY.email} | Phone: ${OUR_ENTITY.phone || 'N/A'}`;
     function renderOurBillsSidebar() {
       const container = document.getElementById('our-bills-list');
       container.innerHTML = ourBills.map(bill => `
-        <div onclick="openInvoicePreviewModal('${escapeHtml(bill.invoiceNo)}')" class="p-3.5 rounded-xl border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/30 cursor-pointer transition-all group">
+        <div onclick="openInvoicePreviewModal('${escapeHtml(bill.invoiceNo)}')" class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700/80 hover:border-indigo-400 dark:hover:border-indigo-500 hover:bg-indigo-50/30 dark:hover:bg-indigo-950/30 cursor-pointer transition-all group">
           <div class="flex items-center justify-between">
-            <span class="font-mono text-xs font-bold text-indigo-700 group-hover:underline">${escapeHtml(bill.invoiceNo)}</span>
+            <span class="font-mono text-xs font-bold text-indigo-700 dark:text-indigo-400 group-hover:underline">${escapeHtml(bill.invoiceNo)}</span>
             <span class="text-[11px] text-slate-400">${escapeHtml(bill.invoiceDate)}</span>
           </div>
-          <p class="text-xs font-semibold text-slate-800 mt-1 truncate">${escapeHtml(bill.vendorName)}</p>
-          <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 text-xs">
-            <span class="font-mono text-[11px] text-slate-500">${escapeHtml(bill.vendorGstin)}</span>
-            <span class="font-mono font-bold text-slate-900">${formatINR(bill.totalAmount)}</span>
+          <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-1 truncate">${escapeHtml(bill.vendorName)}</p>
+          <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
+            <span class="font-mono text-[11px] text-slate-500 dark:text-slate-400">${escapeHtml(bill.vendorGstin)}</span>
+            <span class="font-mono font-bold text-slate-900 dark:text-white">${formatINR(bill.totalAmount)}</span>
           </div>
         </div>
       `).join('');
@@ -3003,16 +3106,16 @@ Email: ${OUR_ENTITY.email} | Phone: ${OUR_ENTITY.phone || 'N/A'}`;
 
       dropzone.addEventListener('dragover', (e) => {
         e.preventDefault();
-        dropzone.classList.add('border-indigo-500', 'bg-indigo-50/50');
+        dropzone.classList.add('border-indigo-500', 'bg-indigo-50/50', 'dark:bg-indigo-950/50');
       });
 
       dropzone.addEventListener('dragleave', () => {
-        dropzone.classList.remove('border-indigo-500', 'bg-indigo-50/50');
+        dropzone.classList.remove('border-indigo-500', 'bg-indigo-50/50', 'dark:bg-indigo-950/50');
       });
 
       dropzone.addEventListener('drop', (e) => {
         e.preventDefault();
-        dropzone.classList.remove('border-indigo-500', 'bg-indigo-50/50');
+        dropzone.classList.remove('border-indigo-500', 'bg-indigo-50/50', 'dark:bg-indigo-950/50');
         const file = e.dataTransfer.files[0];
         if (file) handleCsvFile(file);
       });
@@ -3109,16 +3212,16 @@ Email: ${OUR_ENTITY.email} | Phone: ${OUR_ENTITY.phone || 'N/A'}`;
       tbody.innerHTML = stagedCsvRows.map(r => {
         const tax = round2(r.cgst + r.sgst + r.igst);
         return `
-          <tr class="hover:bg-slate-50">
-            <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${escapeHtml(r.invoiceNo)}</td>
-            <td class="py-2.5 px-3 text-slate-600">${escapeHtml(r.invoiceDate)}</td>
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60">
+            <td class="py-2.5 px-3 font-mono font-bold text-slate-900 dark:text-white">${escapeHtml(r.invoiceNo)}</td>
+            <td class="py-2.5 px-3 text-slate-600 dark:text-slate-400">${escapeHtml(r.invoiceDate)}</td>
             <td class="py-2.5 px-3">
-              <div class="font-semibold text-slate-800">${escapeHtml(r.vendorName)}</div>
-              <div class="font-mono text-[11px] text-slate-500">${escapeHtml(r.vendorGstin)}</div>
+              <div class="font-semibold text-slate-800 dark:text-slate-200">${escapeHtml(r.vendorName)}</div>
+              <div class="font-mono text-[11px] text-slate-500 dark:text-slate-400">${escapeHtml(r.vendorGstin)}</div>
             </td>
-            <td class="py-2.5 px-3 text-right font-mono">${formatINR(r.taxableValue)}</td>
-            <td class="py-2.5 px-3 text-right font-mono text-indigo-700">${formatINR(tax)}</td>
-            <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-900">${formatINR(r.totalAmount)}</td>
+            <td class="py-2.5 px-3 text-right font-mono text-slate-800 dark:text-slate-200">${formatINR(r.taxableValue)}</td>
+            <td class="py-2.5 px-3 text-right font-mono text-indigo-700 dark:text-indigo-400">${formatINR(tax)}</td>
+            <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-900 dark:text-white">${formatINR(r.totalAmount)}</td>
           </tr>
         `;
       }).join('');
@@ -3345,36 +3448,36 @@ Email: ${OUR_ENTITY.email} | Phone: ${OUR_ENTITY.phone || 'N/A'}`;
 
     function renderStatusBadge(status) {
       const styles = {
-        'Exact Match': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-        'Tax / Amount Mismatch': 'bg-rose-50 text-rose-700 border-rose-200',
-        'GSTIN / Date Mismatch': 'bg-amber-50 text-amber-800 border-amber-200',
-        'Missing in Vendor Data': 'bg-purple-50 text-purple-700 border-purple-200',
-        'Unrecorded Vendor Bill': 'bg-sky-50 text-sky-700 border-sky-200'
+        'Exact Match': 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/80',
+        'Tax / Amount Mismatch': 'bg-rose-50 dark:bg-rose-950/70 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/80',
+        'GSTIN / Date Mismatch': 'bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800/80',
+        'Missing in Vendor Data': 'bg-purple-50 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800/80',
+        'Unrecorded Vendor Bill': 'bg-sky-50 dark:bg-sky-950/70 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800/80'
       };
-      const cls = styles[status] || 'bg-slate-100 text-slate-700 border-slate-200';
+      const cls = styles[status] || 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700';
       return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${cls}">${escapeHtml(status)}</span>`;
     }
 
     function renderSeverityBadge(severity) {
       const styles = {
         'Critical': 'bg-rose-600 text-white',
-        'High': 'bg-rose-100 text-rose-800 border border-rose-200',
-        'Medium': 'bg-amber-100 text-amber-800 border border-amber-200',
-        'Low': 'bg-sky-100 text-sky-800 border border-sky-200',
-        'None': 'bg-slate-100 text-slate-500'
+        'High': 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800/80',
+        'Medium': 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/80',
+        'Low': 'bg-sky-100 dark:bg-sky-950/80 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-800/80',
+        'None': 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
       };
-      const cls = styles[severity] || 'bg-slate-100 text-slate-600';
+      const cls = styles[severity] || 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400';
       return `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold ${cls}">${escapeHtml(severity)}</span>`;
     }
 
     function renderVendorRiskBadge(risk) {
       if (risk === 'High Risk') {
-        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200">● High Risk</span>`;
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800/80">● High Risk</span>`;
       }
       if (risk === 'Medium Risk') {
-        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">● Medium Risk</span>`;
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/80">● Medium Risk</span>`;
       }
-      return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">● Low Risk</span>`;
+      return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80">● Low Risk</span>`;
     }
 
     function openModal(id) {
@@ -3451,10 +3554,10 @@ Email: ${OUR_ENTITY.email} | Phone: ${OUR_ENTITY.phone || 'N/A'}`;
 
     function escapeHtml(str) {
       return String(str ?? '')
-        .replace(/&/g, '&')
-        .replace(/</g, '<')
-        .replace(/>/g, '>')
-        .replace(/"/g, '"');
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
     }
   </script>
 </body>
