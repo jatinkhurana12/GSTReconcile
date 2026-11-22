@@ -666,7 +666,7 @@
         <section id="view-levelup" class="hidden -mx-4 sm:-mx-8 -my-6 px-4 sm:px-8 py-6 sm:py-10 bg-[#FAF9F6] min-h-[calc(100vh-4rem)]">
           <div class="max-w-6xl mx-auto">
 
-            <!-- Top Back Arrow Bar (Matches Reference Screenshot) -->
+            <!-- Top Back Arrow Bar -->
             <div class="flex items-center justify-between mb-6">
               <button type="button" onclick="returnFromLevelUp()" class="inline-flex items-center gap-2 p-2 -ml-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-stone-200/60 transition-all cursor-pointer" title="Back to workspace">
                 <i data-lucide="arrow-left" class="w-5 h-5"></i>
@@ -686,10 +686,10 @@
 
               <!-- Segmented Audience Pill (Individual / CA & Enterprise) -->
               <div class="inline-flex items-center p-1 rounded-xl bg-stone-200/70 border border-stone-300/70">
-                <button type="button" id="seg-individual" onclick="setLevelUpSegment('individual')" class="px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white text-stone-900 shadow-sm transition-all">
+                <button type="button" id="seg-individual" onclick="setLevelUpSegment('individual')" class="px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white text-stone-900 shadow-sm transition-all cursor-pointer">
                   Individual & SMEs
                 </button>
-                <button type="button" id="seg-enterprise" onclick="setLevelUpSegment('enterprise')" class="px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-stone-600 hover:text-stone-900 transition-all">
+                <button type="button" id="seg-enterprise" onclick="setLevelUpSegment('enterprise')" class="px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-stone-600 hover:text-stone-900 transition-all cursor-pointer">
                   CA Firms & Enterprise
                 </button>
               </div>
@@ -760,7 +760,7 @@
                 </div>
               </div>
 
-              <!-- CARD 2: PRO (₹399 / month) -->
+              <!-- CARD 2: PRO -->
               <div id="plan-card-PRO" class="bg-white rounded-2xl border border-stone-200/90 p-7 flex flex-col justify-between shadow-sm transition-all">
                 <div>
                   <!-- Top Row: Botanical 3-Node Icon + Billing Cycle Toggle Pill -->
@@ -778,7 +778,7 @@
                       </svg>
                     </div>
 
-                    <!-- Monthly / Yearly Save 17% Pill (Matches Screenshot) -->
+                    <!-- Monthly / Yearly Save 17% Pill -->
                     <div class="inline-flex items-center p-0.5 rounded-full bg-stone-100 border border-stone-200 text-[11px]">
                       <button type="button" id="bill-cycle-monthly" onclick="setBillingCycle('monthly')" class="px-2.5 py-1 rounded-full font-semibold bg-white text-stone-900 shadow-xs transition-all cursor-pointer">
                         Monthly
@@ -790,7 +790,7 @@
                   </div>
 
                   <div class="flex items-center justify-between gap-2">
-                    <h3 class="text-2xl font-bold text-stone-900 tracking-tight">Pro</h3>
+                    <h3 id="title-plan-PRO" class="text-2xl font-bold text-stone-900 tracking-tight">Pro</h3>
                     <span id="badge-active-PRO" class="hidden px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">Active Plan</span>
                   </div>
                   <p id="desc-plan-PRO" class="text-sm text-stone-500 mt-1">Reconcile faster & automate notices</p>
@@ -799,7 +799,7 @@
                   <div class="mt-6 mb-6 flex items-center gap-2.5">
                     <span id="price-display-PRO" class="text-4xl font-bold text-stone-900 tracking-tight">₹399</span>
                     <div class="text-[11px] leading-tight text-stone-500">
-                      <span class="block font-medium text-stone-700">INR / month</span>
+                      <span id="unit-label-PRO" class="block font-medium text-stone-700">INR / month</span>
                       <span id="billing-subtext-PRO">billed monthly (includes GST)</span>
                     </div>
                   </div>
@@ -816,7 +816,7 @@
                   <ul class="space-y-3 text-sm text-stone-700">
                     <li class="flex items-start gap-2.5">
                       <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
-                      <span>Generate & compare up to <strong>100 bills / month</strong></span>
+                      <span id="feat-quota-PRO">Generate & compare up to <strong>100 bills / month</strong></span>
                     </li>
                     <li class="flex items-start gap-2.5">
                       <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
@@ -838,7 +838,7 @@
                 </div>
               </div>
 
-              <!-- CARD 3: MAX & ENTERPRISE (₹599 / month — Recommended) -->
+              <!-- CARD 3: MAX & ENTERPRISE (Recommended) -->
               <div id="plan-card-MAX" class="bg-gradient-to-b from-[#F4F5FB] to-white rounded-2xl border border-indigo-200/90 p-7 flex flex-col justify-between shadow-md transition-all">
                 <div>
                   <!-- Flourishing Multi-Node Botanical SVG -->
@@ -860,7 +860,7 @@
                   </div>
 
                   <div class="flex flex-wrap items-center gap-2">
-                    <h3 class="text-2xl font-bold text-stone-900 tracking-tight">Max & Enterprise</h3>
+                    <h3 id="title-plan-MAX" class="text-2xl font-bold text-stone-900 tracking-tight">Max & Enterprise</h3>
                     <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-100 text-indigo-700">Recommended</span>
                     <span id="badge-active-MAX" class="hidden px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">Active Plan</span>
                   </div>
@@ -872,7 +872,7 @@
                       <span id="price-display-MAX" class="text-4xl font-bold text-stone-900 tracking-tight">₹599</span>
                     </div>
                     <div class="text-[11px] leading-tight text-stone-500 mt-1">
-                      <span class="font-medium text-stone-700">INR / month</span> · <span id="billing-subtext-MAX">billed monthly (includes GST)</span>
+                      <span id="unit-label-MAX" class="font-medium text-stone-700">INR / month</span> · <span id="billing-subtext-MAX">billed monthly (includes GST)</span>
                     </div>
                   </div>
 
@@ -888,7 +888,7 @@
                   <ul class="space-y-3 text-sm text-stone-700">
                     <li class="flex items-start gap-2.5">
                       <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
-                      <span><strong>Unlimited bills</strong> generation & reconciliation</span>
+                      <span id="feat-quota-MAX"><strong>Unlimited bills</strong> generation & reconciliation</span>
                     </li>
                     <li class="flex items-start gap-2.5">
                       <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
@@ -900,7 +900,7 @@
                     </li>
                     <li class="flex items-start gap-2.5">
                       <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
-                      <span>All current & upcoming TaxSync GST compliance tools</span>
+                      <span id="feat-extra-MAX">All current & upcoming TaxSync GST compliance tools</span>
                     </li>
                   </ul>
                 </div>
@@ -908,7 +908,7 @@
 
             </div>
 
-            <!-- Footnote matching screenshot aesthetic -->
+            <!-- Footnote -->
             <div class="mt-10 text-center max-w-2xl mx-auto text-[11px] leading-relaxed text-stone-500 space-y-1">
               <p>*Monthly bill generation and comparison quotas reset on the 1st of each calendar month. Prices are in INR and inclusive of applicable GST.</p>
               <p>Upgrade or downgrade anytime with zero lock-in. Your existing GST invoices and taxpayer records remain preserved across plan changes.</p>
@@ -992,6 +992,53 @@
   </div>
 
   <!-- =====================================================================
+       MODAL 2: PRINTABLE GST TAX INVOICE PREVIEW MODAL
+  ====================================================================== -->
+  <div id="invoice-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-3xl w-full overflow-hidden flex flex-col max-h-[92vh]">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between no-print">
+        <h3 class="text-base font-bold">GST Tax Invoice Preview</h3>
+        <button type="button" onclick="closeModal('invoice-modal')" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div id="printable-invoice-area" class="p-6 sm:p-8 space-y-6 overflow-y-auto flex-1 bg-white">
+        <!-- Populated dynamically -->
+      </div>
+      <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3 no-print">
+        <button type="button" onclick="closeModal('invoice-modal')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200">Close</button>
+        <div class="flex items-center gap-2.5">
+          <button id="btn-download-single-json" type="button" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-white hover:bg-slate-100 text-slate-800 border border-slate-300">
+            <i data-lucide="file-code" class="w-4 h-4"></i>
+            E-Invoice JSON
+          </button>
+          <button type="button" onclick="window.print()" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            Print / Save PDF
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       MODAL 3: OFFICIAL GST PORTAL FILING HELPER MODAL
+  ====================================================================== -->
+  <div id="portal-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full overflow-hidden">
+      <div class="px-6 py-4 bg-emerald-900 text-white flex items-center justify-between">
+        <h3 class="text-base font-bold">GSTR-3B / GSTR-1 Filing Ready</h3>
+        <button type="button" onclick="closeModal('portal-modal')" class="p-1 rounded-lg text-emerald-300 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div id="portal-modal-body" class="p-6 space-y-4">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
        MODAL 5: FEATURE / QUOTA UPGRADE PROMPT MODAL
   ====================================================================== -->
   <div id="upgradePromptModal" class="fixed inset-0 z-[65] hidden bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4">
@@ -1042,42 +1089,97 @@
       OUR_BILLS: 'taxsync_gst_our_bills_v1',
       VENDOR_BILLS: 'taxsync_gst_vendor_bills_v1',
       TAXPAYER_ENTITY: 'taxsync_gst_taxpayer_entity_v1',
-      SUBSCRIPTION_PLAN: 'taxsync_gst_plan_v1'
+      SUBSCRIPTION_PLAN: 'taxsync_gst_plan_v1',
+      SUBSCRIPTION_SEGMENT: 'taxsync_gst_segment_v1'
+    };
+
+    // Segment-differentiated pricing (Hiked CA Firms & Enterprise rates)
+    const SEGMENT_PRICING = {
+      individual: {
+        label: 'Individual & SMEs',
+        FREE: {
+          name: 'Free',
+          monthlyPrice: 0,
+          yearlyMonthlyPrice: 0,
+          yearlyTotal: 0,
+          desc: 'Get started with TaxSync GST',
+          unitLabel: 'INR / month',
+          quotaLabel: 'Generate & compare up to <strong>15 bills / month</strong>'
+        },
+        PRO: {
+          name: 'Pro',
+          monthlyPrice: 399,
+          yearlyMonthlyPrice: 331,
+          yearlyTotal: 3972,
+          desc: 'Reconcile faster & automate notices',
+          unitLabel: 'INR / month',
+          quotaLabel: 'Generate & compare up to <strong>100 bills / month</strong>'
+        },
+        MAX: {
+          name: 'Max & Enterprise',
+          monthlyPrice: 599,
+          yearlyMonthlyPrice: 497,
+          yearlyTotal: 5964,
+          desc: 'Unlimited bills, risk intelligence & full suite',
+          unitLabel: 'INR / month',
+          quotaLabel: '<strong>Unlimited bills</strong> generation & reconciliation',
+          extraFeature: 'All current & upcoming TaxSync GST compliance tools'
+        }
+      },
+      enterprise: {
+        label: 'CA Firms & Enterprise',
+        FREE: {
+          name: 'Free (CA Trial)',
+          monthlyPrice: 0,
+          yearlyMonthlyPrice: 0,
+          yearlyTotal: 0,
+          desc: 'Evaluate TaxSync for single-client trials',
+          unitLabel: 'INR / month',
+          quotaLabel: 'Generate & compare up to <strong>15 bills / month</strong>'
+        },
+        PRO: {
+          name: 'CA Practice Pro',
+          monthlyPrice: 799,
+          yearlyMonthlyPrice: 663,
+          yearlyTotal: 7956,
+          desc: 'For independent CAs & tax practitioners',
+          unitLabel: 'INR / month · practice license',
+          quotaLabel: 'Generate & compare up to <strong>500 client bills / month</strong>'
+        },
+        MAX: {
+          name: 'CA Firm & Enterprise',
+          monthlyPrice: 1499,
+          yearlyMonthlyPrice: 1244,
+          yearlyTotal: 14928,
+          desc: 'Built for CA firms & multi-client GST teams',
+          unitLabel: 'INR / month · multi-client suite',
+          quotaLabel: '<strong>Unlimited client bills</strong> & bulk GSTIN reconciliation',
+          extraFeature: 'Multi-client GSTIN switcher, audit trail & priority CA desk'
+        }
+      }
     };
 
     const SUBSCRIPTION_PLANS = {
       FREE: {
         id: 'FREE',
-        name: 'Free',
-        monthlyPrice: 0,
-        yearlyMonthlyPrice: 0,
         billLimit: 15,
         hasMailDraft: false,
         hasGstFiling: false,
-        hasRiskAnalysis: false,
-        summaryText: 'Free Plan • 15 bills/mo'
+        hasRiskAnalysis: false
       },
       PRO: {
         id: 'PRO',
-        name: 'Pro',
-        monthlyPrice: 399,
-        yearlyMonthlyPrice: 331,
         billLimit: 100,
         hasMailDraft: true,
         hasGstFiling: true,
-        hasRiskAnalysis: false,
-        summaryText: 'Pro (₹399/mo) • 100 bills/mo'
+        hasRiskAnalysis: false
       },
       MAX: {
         id: 'MAX',
-        name: 'Max & Enterprise',
-        monthlyPrice: 599,
-        yearlyMonthlyPrice: 497,
         billLimit: Infinity,
         hasMailDraft: true,
         hasGstFiling: true,
-        hasRiskAnalysis: true,
-        summaryText: 'Max (₹599/mo) • Unlimited'
+        hasRiskAnalysis: true
       }
     };
 
@@ -1238,7 +1340,6 @@
       }
     ];
 
-    // Vendor CSV data (includes exact matches, tax mismatch, GSTIN typo, missing bill, and an unrecorded bill)
     const DEFAULT_VENDOR_BILLS = [
       {
         invoiceNo: 'INV-2026-101',
@@ -1340,6 +1441,7 @@
       loadState();
       setupEntityEditor();
       applyTaxpayerEntityToUI();
+      setLevelUpSegment(levelUpSegment, true);
       applySubscriptionPlanToUI();
       setupNavigation();
       setupBillForm();
@@ -1366,6 +1468,13 @@
           currentPlanId = 'FREE';
         }
 
+        const savedSegment = localStorage.getItem(STORAGE_KEYS.SUBSCRIPTION_SEGMENT);
+        if (savedSegment && SEGMENT_PRICING[savedSegment]) {
+          levelUpSegment = savedSegment;
+        } else {
+          levelUpSegment = 'individual';
+        }
+
         const savedBundleRaw = localStorage.getItem(STORAGE_KEYS.RECONCIL_BUNDLE);
         const savedBundle = savedBundleRaw ? JSON.parse(savedBundleRaw) : null;
         const savedEntity = savedBundle?.taxpayerEntity
@@ -1386,6 +1495,7 @@
       } catch (e) {
         console.error('Failed reading LocalStorage, falling back to demo data', e);
         currentPlanId = 'FREE';
+        levelUpSegment = 'individual';
         OUR_ENTITY = cloneDefaultData(DEFAULT_TAXPAYER_ENTITY);
         ourBills = cloneDefaultData(DEFAULT_OUR_BILLS);
         vendorBills = cloneDefaultData(DEFAULT_VENDOR_BILLS);
@@ -1395,6 +1505,7 @@
     function saveState() {
       try {
         localStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_PLAN, currentPlanId);
+        localStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_SEGMENT, levelUpSegment);
         localStorage.setItem(STORAGE_KEYS.TAXPAYER_ENTITY, JSON.stringify(OUR_ENTITY));
         localStorage.setItem(STORAGE_KEYS.OUR_BILLS, JSON.stringify(ourBills));
         localStorage.setItem(STORAGE_KEYS.VENDOR_BILLS, JSON.stringify(vendorBills));
@@ -1411,12 +1522,26 @@
     // -------------------------------------------------------------------------
     // 2A. FREEMIUM MONETIZATION, QUOTA METERING & LEVEL UP ENGINE
     // -------------------------------------------------------------------------
+    function getSegmentTierData(planId, seg = levelUpSegment) {
+      const segmentObj = SEGMENT_PRICING[seg] || SEGMENT_PRICING.individual;
+      return segmentObj[planId] || segmentObj.FREE;
+    }
+
     function getActivePlan() {
-      return SUBSCRIPTION_PLANS[currentPlanId] || SUBSCRIPTION_PLANS.FREE;
+      const base = SUBSCRIPTION_PLANS[currentPlanId] || SUBSCRIPTION_PLANS.FREE;
+      const tier = getSegmentTierData(base.id, levelUpSegment);
+      const effectiveLimit = (base.id === 'PRO' && levelUpSegment === 'enterprise') ? 500 : base.billLimit;
+      const limitStr = effectiveLimit === Infinity ? 'Unlimited' : `${effectiveLimit} bills/mo`;
+
+      return {
+        ...base,
+        ...tier,
+        billLimit: effectiveLimit,
+        summaryText: `${tier.name} (₹${tier.monthlyPrice.toLocaleString('en-IN')}/mo) • ${limitStr}`
+      };
     }
 
     function getMonthlyBillUsageCount() {
-      // Unique invoices generated or compared across our ledger and vendor comparison dataset
       const uniqueInvoices = new Set([
         ...ourBills.map(b => (b.invoiceNo || '').trim().toUpperCase()),
         ...vendorBills.map(b => (b.invoiceNo || '').trim().toUpperCase())
@@ -1433,7 +1558,7 @@
       runReconciliation();
 
       const plan = getActivePlan();
-      const priceStr = plan.monthlyPrice === 0 ? '₹0/month' : `₹${plan.monthlyPrice}/month`;
+      const priceStr = plan.monthlyPrice === 0 ? '₹0/month' : `₹${plan.monthlyPrice.toLocaleString('en-IN')}/month`;
       showToast(`Activated ${plan.name} plan (${priceStr})! Features updated.`, 'success');
     }
 
@@ -1446,44 +1571,61 @@
       const priceMax = document.getElementById('price-display-MAX');
       const subMax = document.getElementById('billing-subtext-MAX');
 
+      const proTier = getSegmentTierData('PRO');
+      const maxTier = getSegmentTierData('MAX');
+
       if (cycle === 'yearly') {
         btnYearly.className = 'px-2.5 py-1 rounded-full font-semibold bg-white text-indigo-700 shadow-xs transition-all cursor-pointer';
         btnMonthly.className = 'px-2.5 py-1 rounded-full font-medium text-stone-600 hover:text-stone-900 transition-all cursor-pointer';
-        pricePro.textContent = '₹331';
-        subPro.textContent = 'billed yearly at ₹3,972 (save 17%)';
-        priceMax.textContent = '₹497';
-        subMax.textContent = 'billed yearly at ₹5,964 (save 17%)';
+        pricePro.textContent = `₹${proTier.yearlyMonthlyPrice.toLocaleString('en-IN')}`;
+        subPro.textContent = `billed yearly at ₹${proTier.yearlyTotal.toLocaleString('en-IN')} (save 17%)`;
+        priceMax.textContent = `₹${maxTier.yearlyMonthlyPrice.toLocaleString('en-IN')}`;
+        subMax.textContent = `billed yearly at ₹${maxTier.yearlyTotal.toLocaleString('en-IN')} (save 17%)`;
       } else {
         btnMonthly.className = 'px-2.5 py-1 rounded-full font-semibold bg-white text-stone-900 shadow-xs transition-all cursor-pointer';
         btnYearly.className = 'px-2.5 py-1 rounded-full font-medium text-indigo-600 hover:text-indigo-700 transition-all cursor-pointer';
-        pricePro.textContent = '₹399';
+        pricePro.textContent = `₹${proTier.monthlyPrice.toLocaleString('en-IN')}`;
         subPro.textContent = 'billed monthly (includes GST)';
-        priceMax.textContent = '₹599';
+        priceMax.textContent = `₹${maxTier.monthlyPrice.toLocaleString('en-IN')}`;
         subMax.textContent = 'billed monthly (includes GST)';
       }
     }
 
-    function setLevelUpSegment(seg) {
+    function setLevelUpSegment(seg, skipSave = false) {
+      if (!SEGMENT_PRICING[seg]) return;
       levelUpSegment = seg;
+      if (!skipSave) saveState();
+
       const btnInd = document.getElementById('seg-individual');
       const btnEnt = document.getElementById('seg-enterprise');
-      const descFree = document.getElementById('desc-plan-FREE');
-      const descPro = document.getElementById('desc-plan-PRO');
-      const descMax = document.getElementById('desc-plan-MAX');
 
       if (seg === 'enterprise') {
-        btnEnt.className = 'px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white text-stone-900 shadow-sm transition-all';
-        btnInd.className = 'px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-stone-600 hover:text-stone-900 transition-all';
-        descFree.textContent = 'Evaluate TaxSync for single-client trials';
-        descPro.textContent = 'For boutique tax practitioners & consultants';
-        descMax.textContent = 'Built for CA firms & high-volume GST teams';
+        btnEnt.className = 'px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white text-stone-900 shadow-sm transition-all cursor-pointer';
+        btnInd.className = 'px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-stone-600 hover:text-stone-900 transition-all cursor-pointer';
       } else {
-        btnInd.className = 'px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white text-stone-900 shadow-sm transition-all';
-        btnEnt.className = 'px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-stone-600 hover:text-stone-900 transition-all';
-        descFree.textContent = 'Get started with TaxSync GST';
-        descPro.textContent = 'Reconcile faster & automate notices';
-        descMax.textContent = 'Unlimited bills, risk intelligence & full suite';
+        btnInd.className = 'px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white text-stone-900 shadow-sm transition-all cursor-pointer';
+        btnEnt.className = 'px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-stone-600 hover:text-stone-900 transition-all cursor-pointer';
       }
+
+      const freeTier = getSegmentTierData('FREE', seg);
+      const proTier = getSegmentTierData('PRO', seg);
+      const maxTier = getSegmentTierData('MAX', seg);
+
+      document.getElementById('desc-plan-FREE').textContent = freeTier.desc;
+      document.getElementById('title-plan-PRO').textContent = proTier.name;
+      document.getElementById('desc-plan-PRO').textContent = proTier.desc;
+      document.getElementById('unit-label-PRO').textContent = proTier.unitLabel;
+      document.getElementById('feat-quota-PRO').innerHTML = proTier.quotaLabel;
+
+      document.getElementById('title-plan-MAX').textContent = maxTier.name;
+      document.getElementById('desc-plan-MAX').textContent = maxTier.desc;
+      document.getElementById('unit-label-MAX').textContent = maxTier.unitLabel;
+      document.getElementById('feat-quota-MAX').innerHTML = maxTier.quotaLabel;
+      document.getElementById('feat-extra-MAX').textContent = maxTier.extraFeature;
+
+      // Refresh displayed monthly/yearly numbers and active plan pills
+      setBillingCycle(levelUpBillingCycle);
+      applySubscriptionPlanToUI();
     }
 
     function applySubscriptionPlanToUI() {
@@ -1526,7 +1668,7 @@
       // Level Up page active state indicators
       const currentPill = document.getElementById('levelup-current-pill');
       if (currentPill) {
-        currentPill.textContent = `${plan.name} (₹${plan.monthlyPrice}/mo)`;
+        currentPill.textContent = `${plan.name} (₹${plan.monthlyPrice.toLocaleString('en-IN')}/mo)`;
       }
 
       ['FREE', 'PRO', 'MAX'].forEach(pid => {
@@ -1556,10 +1698,10 @@
             btn.textContent = 'Use TaxSync for free';
             btn.className = 'w-full py-3 px-4 rounded-xl text-sm font-semibold bg-stone-100 hover:bg-stone-200 text-stone-900 border border-stone-200/80 transition-all cursor-pointer';
           } else if (pid === 'PRO') {
-            btn.textContent = 'Get Pro plan';
+            btn.textContent = levelUpSegment === 'enterprise' ? 'Get CA Practice Pro' : 'Get Pro plan';
             btn.className = 'w-full py-3 px-4 rounded-xl text-sm font-semibold bg-[#18181B] hover:bg-stone-800 text-white shadow-sm transition-all cursor-pointer';
           } else {
-            btn.textContent = 'Get Max plan';
+            btn.textContent = levelUpSegment === 'enterprise' ? 'Get CA Firm & Enterprise' : 'Get Max plan';
             btn.className = 'w-full py-3 px-4 rounded-xl text-sm font-semibold bg-[#18181B] hover:bg-stone-800 text-white shadow-sm transition-all cursor-pointer';
           }
         }
@@ -1753,7 +1895,6 @@
 
     function openEntityEditorModal() {
       ensureEntityModalExists();
-      // If mobile sidebar drawer is open, close it so modal is cleanly focused
       const sb = document.getElementById('sidebar');
       if (sb && !sb.classList.contains('hidden') && window.innerWidth < 1024) {
         sb.classList.add('hidden');
@@ -1795,7 +1936,6 @@
       const headerPill = document.getElementById('header-entity-pill');
       if (headerPill) headerPill.textContent = OUR_ENTITY.gstin;
 
-      // Sync Generate GST Bill banner & default supply type rule
       const formEntityName = document.getElementById('bill-form-entity-name');
       if (formEntityName) {
         formEntityName.textContent = `${OUR_ENTITY.name}${OUR_ENTITY.tradeName && OUR_ENTITY.tradeName !== OUR_ENTITY.name ? ` (${OUR_ENTITY.tradeName})` : ''}`;
@@ -1811,7 +1951,6 @@
         }
       }
 
-      // Sync default CC in rectification email modal
       const ccInput = document.getElementById('draft-email-cc');
       if (ccInput) {
         ccInput.value = OUR_ENTITY.email;
@@ -1831,7 +1970,6 @@
 
       const processedInvoices = new Set();
 
-      // Step A: Iterate through Our GST Bills and compare with Vendor Bills
       ourBills.forEach(ob => {
         const key = ob.invoiceNo.trim().toUpperCase();
         processedInvoices.add(key);
@@ -1952,7 +2090,6 @@
         }
       });
 
-      // Step B: Check for Unrecorded Vendor Bills
       vendorBills.forEach(vb => {
         const key = vb.invoiceNo.trim().toUpperCase();
         if (!processedInvoices.has(key)) {
@@ -2096,6 +2233,8 @@
       }
 
       emptyState.classList.add('hidden');
+      const proTier = getSegmentTierData('PRO');
+      const maxTier = getSegmentTierData('MAX');
 
       tbody.innerHTML = filtered.map(rec => {
         const isMatched = rec.status === 'Exact Match';
@@ -2123,7 +2262,7 @@
                 <span class="text-[11px] font-mono text-slate-500">${escapeHtml(rec.vendorGstin)}</span>
                 ${getActivePlan().hasRiskAnalysis
                   ? renderVendorRiskBadge(vRisk)
-                  : `<button type="button" onclick="promptRiskAnalysisUpgrade()" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 hover:bg-amber-100 text-slate-500 hover:text-amber-800 border border-slate-200 transition-colors cursor-pointer" title="Unlock AI Vendor Risk Analysis in Max (₹599/mo)">🔒 Risk (Max)</button>`
+                  : `<button type="button" onclick="promptRiskAnalysisUpgrade()" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 hover:bg-amber-100 text-slate-500 hover:text-amber-800 border border-slate-200 transition-colors cursor-pointer" title="Unlock AI Vendor Risk Analysis in ${maxTier.name} (₹${maxTier.monthlyPrice.toLocaleString('en-IN')}/mo)">🔒 Risk (Max)</button>`
                 }
               </div>
             </td>
@@ -2157,7 +2296,7 @@
                     File on GST Portal ↗
                   </button>
                 ` : `
-                  <button type="button" onclick="promptGstFilingUpgrade()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-800 border border-slate-200 hover:border-amber-300 transition-all whitespace-nowrap cursor-pointer" title="Available on Pro (₹399/mo) & Max (₹599/mo)">
+                  <button type="button" onclick="promptGstFilingUpgrade()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-800 border border-slate-200 hover:border-amber-300 transition-all whitespace-nowrap cursor-pointer" title="Available on ${proTier.name} (₹${proTier.monthlyPrice.toLocaleString('en-IN')}/mo)">
                     <i data-lucide="lock" class="w-3 h-3"></i>
                     GST Filing (Pro)
                   </button>
@@ -2169,7 +2308,7 @@
                     Draft Mail
                   </button>
                 ` : `
-                  <button type="button" onclick="promptMailDraftUpgrade()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-800 border border-slate-200 hover:border-amber-300 transition-all whitespace-nowrap cursor-pointer" title="Available on Pro (₹399/mo) & Max (₹599/mo)">
+                  <button type="button" onclick="promptMailDraftUpgrade()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-800 border border-slate-200 hover:border-amber-300 transition-all whitespace-nowrap cursor-pointer" title="Available on ${proTier.name} (₹${proTier.monthlyPrice.toLocaleString('en-IN')}/mo)">
                     <i data-lucide="lock" class="w-3 h-3"></i>
                     Draft Mail (Pro)
                   </button>
@@ -2412,7 +2551,7 @@ Email: ${OUR_ENTITY.email} | Phone: ${OUR_ENTITY.phone || 'N/A'}`;
     }
 
     // -------------------------------------------------------------------------
-    // 6. OFFICIAL GST PORTAL HELPER (FOR EXACT MATCH BILLS)
+    // 6. OFFICIAL GST PORTAL HELPER & UPGRADE PROMPTS
     // -------------------------------------------------------------------------
     function openPortalFilingHelper(key) {
       if (!getActivePlan().hasGstFiling) {
@@ -2449,36 +2588,39 @@ Email: ${OUR_ENTITY.email} | Phone: ${OUR_ENTITY.phone || 'N/A'}`;
     }
 
     function promptMailDraftUpgrade() {
+      const proTier = getSegmentTierData('PRO');
       openUpgradePrompt({
         tierBadge: 'Pro & Max Feature',
         title: 'Unlock Automated Rectification Mail Drafts',
         description: 'Generate ready-to-send GST discrepancy notices with itemized tax variance breakdowns and one-click email launch on Pro or Max.',
         highlightHtml: `
-          <div class="font-semibold">Recommended: Pro Plan — ₹399 / month</div>
-          <div class="text-indigo-800">Includes 100 bills/month, automated rectification mail drafts, and direct GST Portal filing.</div>
+          <div class="font-semibold">Recommended: ${proTier.name} — ₹${proTier.monthlyPrice.toLocaleString('en-IN')} / month</div>
+          <div class="text-indigo-800">Includes higher monthly bill limits, automated rectification mail drafts, and direct GST Portal filing.</div>
         `
       });
     }
 
     function promptGstFilingUpgrade() {
+      const proTier = getSegmentTierData('PRO');
       openUpgradePrompt({
         tierBadge: 'Pro & Max Feature',
         title: 'Unlock Direct GST Portal Filing Readiness',
         description: 'Verify GSTR-3B / GSTR-1 filing readiness and launch directly into the official GST portal on Pro or Max.',
         highlightHtml: `
-          <div class="font-semibold">Recommended: Pro Plan — ₹399 / month</div>
-          <div class="text-indigo-800">Includes 100 bills/month, direct GST filing helper, and automated vendor email drafts.</div>
+          <div class="font-semibold">Recommended: ${proTier.name} — ₹${proTier.monthlyPrice.toLocaleString('en-IN')} / month</div>
+          <div class="text-indigo-800">Includes higher monthly bill limits, direct GST filing helper, and automated vendor email drafts.</div>
         `
       });
     }
 
     function promptRiskAnalysisUpgrade() {
+      const maxTier = getSegmentTierData('MAX');
       openUpgradePrompt({
         tierBadge: 'Max Exclusive Feature',
         title: 'Unlock Vendor Risk Analysis & Directory',
         description: 'Identify high-risk suppliers, track ITC exposure by vendor, and resolve bulk discrepancies in one click with Max & Enterprise.',
         highlightHtml: `
-          <div class="font-semibold">Max & Enterprise Plan — ₹599 / month</div>
+          <div class="font-semibold">${maxTier.name} — ₹${maxTier.monthlyPrice.toLocaleString('en-IN')} / month</div>
           <div class="text-indigo-800">Includes unlimited bills, full vendor risk intelligence, GST filing, mail drafts, and all platform features.</div>
         `
       });
@@ -2486,14 +2628,16 @@ Email: ${OUR_ENTITY.email} | Phone: ${OUR_ENTITY.phone || 'N/A'}`;
 
     function promptBillQuotaUpgrade(attemptedTotal) {
       const plan = getActivePlan();
+      const proTier = getSegmentTierData('PRO');
+      const maxTier = getSegmentTierData('MAX');
       openUpgradePrompt({
         tierBadge: `${plan.name} Limit Reached (${plan.billLimit} Bills/Mo)`,
         title: 'Monthly Bill Generation & Comparison Limit Reached',
         description: `Your ${plan.name} plan allows generating and comparing up to ${plan.billLimit} bills per month (this action would bring usage to ${attemptedTotal} bills).`,
         highlightHtml: `
           <div class="font-semibold">Level Up for More Capacity:</div>
-          <div class="text-indigo-800">• <strong>Pro (₹399/mo):</strong> Up to 100 bills/month + Mail Drafts & GST Filing</div>
-          <div class="text-indigo-800">• <strong>Max (₹599/mo):</strong> Unlimited bills + Vendor Risk Analysis & All Features</div>
+          <div class="text-indigo-800">• <strong>${proTier.name} (₹${proTier.monthlyPrice.toLocaleString('en-IN')}/mo):</strong> ${levelUpSegment === 'enterprise' ? 'Up to 500 client bills/month' : 'Up to 100 bills/month'} + Mail Drafts & GST Filing</div>
+          <div class="text-indigo-800">• <strong>${maxTier.name} (₹${maxTier.monthlyPrice.toLocaleString('en-IN')}/mo):</strong> Unlimited bills + Vendor Risk Analysis & All Features</div>
         `
       });
     }
@@ -2985,7 +3129,6 @@ Email: ${OUR_ENTITY.email} | Phone: ${OUR_ENTITY.phone || 'N/A'}`;
       const mode = document.getElementById('csv-import-mode').value;
       const plan = getActivePlan();
 
-      // Calculate resulting unique monthly bill count before committing
       const projectedSet = new Set(ourBills.map(b => b.invoiceNo.toUpperCase()));
       if (mode !== 'REPLACE') {
         vendorBills.forEach(b => projectedSet.add(b.invoiceNo.toUpperCase()));
@@ -3308,10 +3451,10 @@ Email: ${OUR_ENTITY.email} | Phone: ${OUR_ENTITY.phone || 'N/A'}`;
 
     function escapeHtml(str) {
       return String(str ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+        .replace(/&/g, '&')
+        .replace(/</g, '<')
+        .replace(/>/g, '>')
+        .replace(/"/g, '"');
     }
   </script>
 </body>
