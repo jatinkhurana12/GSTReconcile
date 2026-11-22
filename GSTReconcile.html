@@ -1,0 +1,3318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaxSync India — GST Reconciliation & Compliance Platform</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet" />
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .font-editorial {
+      font-family: 'Newsreader', Georgia, Cambria, "Times New Roman", serif;
+    }
+    /* Custom scrollbar for clean fintech feel */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    /* Print styling for GST Tax Invoice Modal */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printable-invoice-area,
+      #printable-invoice-area * {
+        visibility: visible;
+      }
+      #printable-invoice-area {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding: 20px !important;
+        box-shadow: none !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased selection:bg-indigo-100 selection:text-indigo-900">
+
+  <!-- Toast Notification Banner -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-[70] flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Main App Shell -->
+  <div class="min-h-screen flex flex-col lg:flex-row">
+
+    <!-- Mobile Header -->
+    <header class="lg:hidden bg-slate-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-30 shadow-md">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center font-bold text-white shadow-inner">
+          <i data-lucide="file-check-2" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <span class="font-bold tracking-tight text-base">TaxSync <span class="text-indigo-400">GST</span></span>
+          <span class="block text-[10px] text-slate-400 uppercase tracking-wider">India Reconciliation</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button type="button" onclick="openEntityEditorModal()" title="Edit Taxpayer Entity" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/35 text-indigo-200 border border-indigo-400/30 text-xs font-semibold transition-all cursor-pointer">
+          <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
+          <span>Entity</span>
+        </button>
+        <button id="mobile-menu-btn" type="button" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="hidden lg:flex flex-col w-72 bg-slate-900 text-slate-300 shrink-0 lg:sticky lg:top-0 lg:h-screen z-40 transition-all shadow-xl lg:shadow-none">
+      <!-- Brand -->
+      <div class="p-6 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-950/50">
+            <i data-lucide="shield-check" class="w-6 h-6"></i>
+          </div>
+          <div>
+            <h1 class="text-lg font-bold text-white tracking-tight leading-none">TaxSync <span class="text-indigo-400">GST</span></h1>
+            <p class="text-xs text-slate-400 mt-1">GSTR-2B & Ledger Engine</p>
+          </div>
+        </div>
+        <button id="close-mobile-menu" type="button" class="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Company Taxpayer Profile Card -->
+      <div class="mx-4 mt-5 p-3.5 rounded-xl bg-slate-800/80 border border-slate-700/80 relative z-10">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-[11px] font-semibold uppercase tracking-wider text-indigo-400">Our Taxpayer Entity</span>
+          <div class="flex items-center gap-1.5">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Active</span>
+            <button id="editEntityBtn" type="button" onclick="openEntityEditorModal()" title="Edit Taxpayer Entity Details" aria-label="Edit Taxpayer Entity Details" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-indigo-500/25 hover:bg-indigo-500/45 active:scale-95 text-indigo-200 hover:text-white border border-indigo-400/40 transition-all cursor-pointer select-none">
+              <i data-lucide="pencil" class="w-3 h-3 pointer-events-none"></i>
+              <span>Edit</span>
+            </button>
+          </div>
+        </div>
+        <p id="sidebar-entity-name" class="text-sm font-semibold text-white mt-1.5 truncate">Apex Enterprise Solutions Pvt Ltd</p>
+        <p id="sidebar-entity-trade" class="text-[11px] text-slate-400 truncate">Trade: Apex Enterprise Solutions</p>
+        <p class="text-xs font-mono text-slate-400 mt-1">GSTIN: <span id="sidebar-entity-gstin" class="text-slate-200">27AABCA8921F1Z5</span></p>
+        <p id="sidebar-entity-state-fy" class="text-[11px] text-slate-400 mt-0.5">State: Maharashtra (27) • FY 2026-27</p>
+      </div>
+
+      <!-- Nav Links -->
+      <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+        <button data-tab="dashboard" type="button" class="nav-btn w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium transition-all bg-indigo-600 text-white shadow-md shadow-indigo-950/40">
+          <span class="flex items-center gap-3">
+            <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+            Dashboard & Reconciliation
+          </span>
+          <span id="nav-badge-discrepancies" class="px-2 py-0.5 text-xs font-semibold rounded-full bg-rose-500 text-white">0</span>
+        </button>
+
+        <button data-tab="generate" type="button" class="nav-btn w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all">
+          <i data-lucide="file-plus-2" class="w-4 h-4"></i>
+          Generate GST Bill
+        </button>
+
+        <button data-tab="import" type="button" class="nav-btn w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all">
+          <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+          Import Vendor CSV
+        </button>
+
+        <button data-tab="vendors" type="button" class="nav-btn w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all">
+          <span class="flex items-center gap-3">
+            <i data-lucide="building-2" class="w-4 h-4"></i>
+            Vendor Risk & Directory
+          </span>
+          <span class="flex items-center gap-1.5">
+            <span id="nav-vendor-lock-badge" class="hidden px-1.5 py-0.5 text-[10px] font-bold rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">MAX</span>
+            <span id="nav-badge-highrisk" class="px-2 py-0.5 text-xs font-semibold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">0</span>
+          </span>
+        </button>
+
+        <div class="pt-3 mt-3 border-t border-slate-800/80">
+          <button data-tab="levelup" type="button" class="nav-btn w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold text-amber-200 bg-gradient-to-r from-amber-500/15 via-indigo-500/15 to-purple-500/15 hover:from-amber-500/25 hover:to-indigo-500/25 border border-amber-400/25 transition-all">
+            <span class="flex items-center gap-3">
+              <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
+              Level Up
+            </span>
+            <span id="sidebar-plan-badge" class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30">FREE</span>
+          </button>
+        </div>
+      </nav>
+
+      <!-- Monthly Usage Meter Card -->
+      <div class="mx-4 mb-3 p-3.5 rounded-xl bg-slate-800/60 border border-slate-700/70 space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-semibold text-slate-300">Monthly Bill Quota</span>
+          <span id="sidebar-usage-text" class="font-mono font-bold text-white">7 / 15</span>
+        </div>
+        <div class="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
+          <div id="sidebar-usage-bar" class="h-full bg-indigo-500 rounded-full transition-all duration-300" style="width: 46%"></div>
+        </div>
+        <div class="flex items-center justify-between text-[11px] text-slate-400">
+          <span id="sidebar-plan-summary">Free Plan • 15 bills/mo</span>
+          <button type="button" onclick="switchTab('levelup')" class="text-indigo-400 hover:text-indigo-300 font-semibold underline cursor-pointer">Upgrade</button>
+        </div>
+      </div>
+
+      <!-- Quick Portal Link & Footer -->
+      <div class="p-4 border-t border-slate-800 space-y-3">
+        <a href="https://www.gst.gov.in/" target="_blank" rel="noopener noreferrer" class="flex items-center justify-between w-full px-3.5 py-2.5 rounded-xl bg-emerald-600/15 hover:bg-emerald-600/25 border border-emerald-500/30 text-emerald-300 text-xs font-semibold transition-all">
+          <span class="flex items-center gap-2">
+            <i data-lucide="external-link" class="w-4 h-4"></i>
+            Official GST Portal
+          </span>
+          <span>gst.gov.in ↗</span>
+        </a>
+        <div class="text-[11px] text-slate-500 px-1 flex items-center justify-between">
+          <span>ITC Protection Active</span>
+          <span>v2.6 IN</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace Area -->
+    <div class="flex-1 flex flex-col min-w-0">
+
+      <!-- Top Header with Summary KPIs -->
+      <header id="main-workspace-header" class="bg-white border-b border-slate-200 px-4 sm:px-8 py-5">
+        <div class="max-w-7xl mx-auto">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-5 border-b border-slate-100">
+            <div>
+              <h2 id="page-title" class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Dashboard & GST Reconciliation</h2>
+              <p id="page-subtitle" class="text-xs sm:text-sm text-slate-500 mt-0.5">Compare purchase/sales GST ledger against vendor CSV filings to prevent ITC leakage.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2.5">
+              <!-- Level Up CTA Button in Header -->
+              <button id="headerLevelUpBtn" type="button" onclick="switchTab('levelup')" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-sm transition-all cursor-pointer">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 pointer-events-none"></i>
+                <span>Level Up</span>
+                <span id="header-plan-tag" class="px-1.5 py-0.5 rounded bg-black/20 text-[10px] uppercase">FREE</span>
+              </button>
+
+              <!-- Quick-Access Taxpayer Entity Pill Button (Always Accessible on Mobile & Desktop) -->
+              <button id="headerEditEntityBtn" type="button" onclick="openEntityEditorModal()" title="View or Edit Our Taxpayer Entity Details" class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white border border-slate-700 shadow-sm transition-all cursor-pointer">
+                <i data-lucide="building-2" class="w-3.5 h-3.5 text-indigo-400 pointer-events-none"></i>
+                <span id="header-entity-pill" class="font-mono">27AABCA8921F1Z5</span>
+                <span class="px-1.5 py-0.5 rounded bg-indigo-500/30 text-indigo-200 text-[10px]">Edit</span>
+              </button>
+
+              <button type="button" onclick="downloadGeneratedBillsCSV()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition-all cursor-pointer">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                Our Bills (CSV)
+              </button>
+              <button type="button" onclick="downloadDiscrepancyReportCSV()" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition-all cursor-pointer">
+                <i data-lucide="file-warning" class="w-3.5 h-3.5"></i>
+                Discrepancy Report (CSV)
+              </button>
+            </div>
+          </div>
+
+          <!-- KPI Strip -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 pt-5">
+            <!-- KPI 1: Total Invoices -->
+            <div class="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/80 flex items-start justify-between">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Reconciled Bills</p>
+                <p id="kpi-total-invoices" class="text-2xl font-extrabold text-slate-900 mt-1">0</p>
+                <p id="kpi-total-value" class="text-xs text-slate-500 mt-1">Ledger Value: ₹0</p>
+              </div>
+              <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                <i data-lucide="receipt" class="w-5 h-5"></i>
+              </div>
+            </div>
+
+            <!-- KPI 2: Matched / Ready to File -->
+            <div class="bg-emerald-50/50 rounded-2xl p-4 border border-emerald-200/80 flex items-start justify-between">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-emerald-700">Matched • Ready to File</p>
+                <p id="kpi-matched-count" class="text-2xl font-extrabold text-emerald-700 mt-1">0</p>
+                <p id="kpi-matched-itc" class="text-xs text-emerald-600 mt-1">Eligible ITC: ₹0</p>
+              </div>
+              <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+              </div>
+            </div>
+
+            <!-- KPI 3: Discrepancies Found -->
+            <div class="bg-rose-50/50 rounded-2xl p-4 border border-rose-200/80 flex items-start justify-between">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-rose-700">Discrepancies Found</p>
+                <p id="kpi-discrepancy-count" class="text-2xl font-extrabold text-rose-700 mt-1">0</p>
+                <p id="kpi-tax-at-risk" class="text-xs text-rose-600 mt-1">ITC at Risk: ₹0</p>
+              </div>
+              <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
+                <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+              </div>
+            </div>
+
+            <!-- KPI 4: High-Risk Vendors -->
+            <div class="bg-amber-50/50 rounded-2xl p-4 border border-amber-200/80 flex items-start justify-between">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-amber-800">High-Risk Vendors</p>
+                <p id="kpi-highrisk-vendors" class="text-2xl font-extrabold text-amber-700 mt-1">0</p>
+                <p id="kpi-total-vendors" class="text-xs text-amber-700/80 mt-1">Out of 0 active vendors</p>
+              </div>
+              <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+                <i data-lucide="shield-alert" class="w-5 h-5"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content Views Container -->
+      <main class="flex-1 px-4 sm:px-8 py-6 max-w-7xl w-full mx-auto">
+
+        <!-- =====================================================================
+             VIEW 1: DASHBOARD & RECONCILIATION WORKSPACE
+        ====================================================================== -->
+        <section id="view-dashboard" class="space-y-6">
+
+          <!-- Action Toolbar: Filters & Priority Rectification Email Trigger -->
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div class="flex flex-wrap items-center gap-2.5">
+              <!-- Search Input -->
+              <div class="relative w-full sm:w-64">
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                <input type="text" id="recon-search" placeholder="Search Invoice #, Vendor, GSTIN..." class="w-full pl-9 pr-3.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
+              </div>
+
+              <!-- Status Filter -->
+              <select id="recon-status-filter" class="px-3.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                <option value="ALL">All Statuses</option>
+                <option value="DISCREPANCIES_ONLY">All Discrepancies Only</option>
+                <option value="Exact Match">Exact Match (Ready to File)</option>
+                <option value="Tax / Amount Mismatch">Tax / Amount Mismatch</option>
+                <option value="GSTIN / Date Mismatch">GSTIN / Date Mismatch</option>
+                <option value="Missing in Vendor Data">Missing in Vendor Data</option>
+                <option value="Unrecorded Vendor Bill">Unrecorded Vendor Bill</option>
+              </select>
+
+              <!-- Severity Filter -->
+              <select id="recon-severity-filter" class="px-3.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                <option value="ALL">All Severities</option>
+                <option value="Critical">Critical Severity</option>
+                <option value="High">High Severity</option>
+                <option value="Medium">Medium Severity</option>
+                <option value="Low">Low Severity</option>
+                <option value="None">No Issue (Matched)</option>
+              </select>
+            </div>
+
+            <!-- Selected Discrepancy Resolution Action -->
+            <div class="flex flex-wrap items-center gap-2.5">
+              <span id="selected-count-label" class="text-xs font-medium text-slate-500">0 discrepancies selected</span>
+              <button id="btn-draft-selected-email" type="button" onclick="openRectificationModalForSelected()" disabled class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                <i data-lucide="mail-warning" class="w-4 h-4"></i>
+                Draft Rectification Email
+              </button>
+            </div>
+          </div>
+
+          <!-- Reconciliation Table Card -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50/90 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    <th class="py-3.5 pl-4 pr-2 w-10">
+                      <input type="checkbox" id="select-all-discrepancies" title="Select all discrepancy rows" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
+                    </th>
+                    <th class="py-3.5 px-3">Invoice & Date</th>
+                    <th class="py-3.5 px-3">Vendor & Risk</th>
+                    <th class="py-3.5 px-3">Reconciliation Status</th>
+                    <th class="py-3.5 px-3">Severity</th>
+                    <th class="py-3.5 px-3 text-right">Our Total / Tax</th>
+                    <th class="py-3.5 px-3 text-right">Vendor Total / Tax</th>
+                    <th class="py-3.5 px-3 text-right">Variance</th>
+                    <th class="py-3.5 pl-3 pr-4 text-right">Next Action</th>
+                  </tr>
+                </thead>
+                <tbody id="reconciliation-table-body" class="divide-y divide-slate-100 text-sm">
+                  <!-- Populated dynamically by JS -->
+                </tbody>
+              </table>
+            </div>
+            <!-- Empty state -->
+            <div id="recon-empty-state" class="hidden py-12 px-4 text-center">
+              <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                <i data-lucide="search-x" class="w-6 h-6"></i>
+              </div>
+              <h4 class="text-sm font-semibold text-slate-800">No matching GST records found</h4>
+              <p class="text-xs text-slate-500 mt-1">Try adjusting your filters or generate/import new GST bills.</p>
+            </div>
+          </div>
+
+          <!-- Helper Legend Banner -->
+          <div class="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-indigo-900">
+            <div class="flex items-start gap-2.5">
+              <i data-lucide="info" class="w-4 h-4 text-indigo-600 shrink-0 mt-0.5"></i>
+              <div>
+                <span class="font-semibold">How Reconciliation Workflow Works:</span>
+                Select one or more discrepancy rows (same vendor recommended for consolidated notice) and click <strong>Draft Rectification Email</strong> to notify the vendor. For <strong>Exact Match</strong> bills, click <strong>File on GST Portal ↗</strong> to proceed with GSTR-3B / GSTR-1 filing.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- =====================================================================
+             VIEW 2: GENERATE GST BILL (DATA ENTRY & TAX INVOICE GENERATOR)
+        ====================================================================== -->
+        <section id="view-generate" class="hidden space-y-6">
+          <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+
+            <!-- Left Column: GST Bill Creation Form -->
+            <div class="xl:col-span-8 bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
+              <div class="flex items-center justify-between pb-4 mb-5 border-b border-slate-100">
+                <div>
+                  <h3 class="text-base sm:text-lg font-bold text-slate-900">Create New GST Tax Invoice</h3>
+                  <p class="text-xs text-slate-500 mt-0.5">Enter product, HSN, and vendor details to record in our GST ledger.</p>
+                </div>
+                <span class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-semibold">Auto-Reconciles on Save</span>
+              </div>
+
+              <form id="gst-bill-form" class="space-y-6">
+                <!-- Our Taxpayer Entity Summary Banner (Editable) -->
+                <div class="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-700">Our Taxpayer Entity (Billing Entity)</span>
+                      <span id="bill-form-entity-state-badge" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white text-indigo-700 border border-indigo-200">27-Maharashtra</span>
+                    </div>
+                    <p id="bill-form-entity-name" class="text-xs sm:text-sm font-bold text-slate-900 mt-0.5 truncate">Apex Enterprise Solutions Pvt Ltd</p>
+                    <p class="text-[11px] font-mono text-slate-600 mt-0.5">
+                      GSTIN: <strong id="bill-form-entity-gstin" class="text-slate-900">27AABCA8921F1Z5</strong> • <span id="bill-form-entity-contact" class="font-sans">gst.compliance@apexenterprise.in</span>
+                    </p>
+                  </div>
+                  <button id="editEntityFormBtn" type="button" onclick="openEntityEditorModal()" class="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200 shadow-sm transition-all cursor-pointer">
+                    <i data-lucide="building" class="w-3.5 h-3.5 pointer-events-none"></i>
+                    <span>Edit Entity Details</span>
+                  </button>
+                </div>
+
+                <!-- Invoice Metadata -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Invoice Number *</label>
+                    <input type="text" id="bill-inv-no" required placeholder="e.g., INV-2026-109" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Invoice Date *</label>
+                    <input type="date" id="bill-inv-date" required class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Supply Type (Tax Rule) *</label>
+                    <select id="bill-supply-type" class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                      <option value="INTRA">Intra-State (CGST + SGST)</option>
+                      <option value="INTER">Inter-State (IGST)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Vendor Details -->
+                <div class="p-4 rounded-xl bg-slate-50/80 border border-slate-200/80 space-y-4">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600">Counterparty / Vendor Details</h4>
+                    <select id="quick-fill-vendor" class="text-xs bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-slate-600">
+                      <option value="">-- Quick-fill existing vendor --</option>
+                    </select>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-700 mb-1.5">Vendor Legal Name *</label>
+                      <input type="text" id="bill-vendor-name" required placeholder="e.g., Bharat Tech Components Ltd" class="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-700 mb-1.5">Vendor GSTIN (15-Digit) *</label>
+                      <input type="text" id="bill-vendor-gstin" required maxlength="15" placeholder="27AAACB1234F1Z2" class="w-full px-3.5 py-2.5 text-sm uppercase font-mono bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
+                      <p id="gstin-validation-hint" class="text-[11px] text-slate-400 mt-1">Format: 2-digit State Code + 10-char PAN + 1Z + Checksum</p>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-700 mb-1.5">Vendor Compliance Email *</label>
+                      <input type="email" id="bill-vendor-email" required placeholder="gst.accounts@vendor.in" class="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" />
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-700 mb-1.5">Place of Supply (State) *</label>
+                      <select id="bill-vendor-state" class="w-full px-3.5 py-2.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                        <option value="27-Maharashtra">27 - Maharashtra</option>
+                        <option value="29-Karnataka">29 - Karnataka</option>
+                        <option value="07-Delhi">07 - Delhi</option>
+                        <option value="33-Tamil Nadu">33 - Tamil Nadu</option>
+                        <option value="24-Gujarat">24 - Gujarat</option>
+                        <option value="36-Telangana">36 - Telangana</option>
+                        <option value="19-West Bengal">19 - West Bengal</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Line Items Section -->
+                <div class="space-y-3">
+                  <div class="flex items-center justify-between">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600">Line Items (Goods / Services)</h4>
+                    <button type="button" onclick="addLineItemRow()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 transition-all">
+                      <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                      Add Item Row
+                    </button>
+                  </div>
+
+                  <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table class="w-full text-left border-collapse min-w-[620px]">
+                      <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase text-slate-500">
+                          <th class="py-2.5 px-3">Description *</th>
+                          <th class="py-2.5 px-2 w-24">HSN/SAC</th>
+                          <th class="py-2.5 px-2 w-20">Qty</th>
+                          <th class="py-2.5 px-2 w-28">Unit Rate (₹)</th>
+                          <th class="py-2.5 px-2 w-24">GST %</th>
+                          <th class="py-2.5 px-3 text-right w-28">Taxable (₹)</th>
+                          <th class="py-2.5 px-2 w-10"></th>
+                        </tr>
+                      </thead>
+                      <tbody id="bill-items-tbody" class="divide-y divide-slate-100 text-sm">
+                        <!-- Dynamic rows inserted here -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Live Summary & Form Actions -->
+                <div class="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+                  <div class="flex flex-wrap gap-2.5">
+                    <button type="submit" class="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-600/20 transition-all">
+                      <i data-lucide="check-circle" class="w-4 h-4"></i>
+                      Save to Ledger & Reconcile
+                    </button>
+                    <button type="button" onclick="previewCurrentFormInvoice()" class="inline-flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 transition-all">
+                      <i data-lucide="printer" class="w-4 h-4"></i>
+                      Preview / Print Invoice
+                    </button>
+                  </div>
+
+                  <!-- Live Tax Totals Box -->
+                  <div class="w-full sm:w-72 bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-2 text-xs">
+                    <div class="flex justify-between text-slate-600">
+                      <span>Taxable Value:</span>
+                      <span id="calc-taxable" class="font-semibold text-slate-900">₹0.00</span>
+                    </div>
+                    <div id="calc-cgst-row" class="flex justify-between text-slate-600">
+                      <span>CGST:</span>
+                      <span id="calc-cgst" class="font-medium text-slate-800">₹0.00</span>
+                    </div>
+                    <div id="calc-sgst-row" class="flex justify-between text-slate-600">
+                      <span>SGST:</span>
+                      <span id="calc-sgst" class="font-medium text-slate-800">₹0.00</span>
+                    </div>
+                    <div id="calc-igst-row" class="hidden flex justify-between text-slate-600">
+                      <span>IGST:</span>
+                      <span id="calc-igst" class="font-medium text-slate-800">₹0.00</span>
+                    </div>
+                    <div class="pt-2 border-t border-slate-200 flex justify-between text-sm font-bold text-indigo-700">
+                      <span>Grand Total:</span>
+                      <span id="calc-grand-total">₹0.00</span>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+
+            <!-- Right Column: Recently Generated Bills Ledger -->
+            <div class="xl:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col">
+              <div class="flex items-center justify-between pb-3.5 mb-4 border-b border-slate-100">
+                <div>
+                  <h3 class="text-base font-bold text-slate-900">Our Generated GST Bills</h3>
+                  <p class="text-xs text-slate-500">Click any bill to view/print PDF invoice</p>
+                </div>
+                <button type="button" onclick="downloadGeneratedBillsCSV()" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700" title="Export Generated Bills CSV">
+                  <i data-lucide="download" class="w-4 h-4"></i>
+                </button>
+              </div>
+
+              <div id="our-bills-list" class="space-y-3 overflow-y-auto max-h-[580px] pr-1 flex-1">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- =====================================================================
+             VIEW 3: IMPORT VENDOR CSV (GSTR-2B / VENDOR DATA UPLOAD)
+        ====================================================================== -->
+        <section id="view-import" class="hidden space-y-6">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- Upload Card -->
+            <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
+              <div>
+                <h3 class="text-lg font-bold text-slate-900">Import Vendor GST CSV</h3>
+                <p class="text-xs text-slate-500 mt-1">Upload vendor-shared GST invoice exports (GSTR-1 / GSTR-2B format) to run automated reconciliation against your ledger.</p>
+              </div>
+
+              <!-- Drag & Drop Dropzone -->
+              <div id="csv-dropzone" class="border-2 border-dashed border-slate-300 hover:border-indigo-500 bg-slate-50/70 hover:bg-indigo-50/30 rounded-2xl p-8 text-center cursor-pointer transition-all">
+                <input type="file" id="csv-file-input" accept=".csv" class="hidden" />
+                <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mx-auto mb-3">
+                  <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+                </div>
+                <p class="text-sm font-semibold text-slate-800">Drop Vendor CSV file here, or <span class="text-indigo-600 underline">browse</span></p>
+                <p class="text-xs text-slate-400 mt-1">Supports standard CSV with InvoiceNo, InvoiceDate, VendorName, VendorGSTIN, TaxableValue, CGST, SGST, IGST, TotalAmount</p>
+              </div>
+
+              <!-- Expected CSV Format Guide -->
+              <div class="text-xs text-slate-500 bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+                <p class="font-semibold text-slate-700 mb-1">Required CSV Headers (Optional RecipientGSTIN checked against Our GSTIN):</p>
+                <code class="block text-[11px] font-mono text-slate-600 break-all">InvoiceNo,InvoiceDate,VendorName,VendorGSTIN,VendorEmail,TaxableValue,CGST,SGST,IGST,TotalAmount,RecipientGSTIN</code>
+              </div>
+            </div>
+
+            <!-- Parsed Preview & Import Action Card -->
+            <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-100">
+                <div>
+                  <h3 class="text-base font-bold text-slate-900">Staged Vendor CSV Preview</h3>
+                  <p id="csv-preview-subtitle" class="text-xs text-slate-500 mt-0.5">Upload a CSV file or load sample data to inspect parsed rows before reconciling.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <select id="csv-import-mode" class="px-3 py-2 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl text-slate-700">
+                    <option value="MERGE">Merge / Upsert Records</option>
+                    <option value="REPLACE">Replace All Vendor Data</option>
+                  </select>
+                  <button id="btn-commit-csv" type="button" onclick="commitStagedCSV()" disabled class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                    <i data-lucide="check-check" class="w-4 h-4"></i>
+                    Import & Reconcile
+                  </button>
+                </div>
+              </div>
+
+              <div class="overflow-x-auto border border-slate-200 rounded-xl flex-1">
+                <table class="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase text-slate-500">
+                      <th class="py-2.5 px-3">Invoice #</th>
+                      <th class="py-2.5 px-3">Date</th>
+                      <th class="py-2.5 px-3">Vendor & GSTIN</th>
+                      <th class="py-2.5 px-3 text-right">Taxable</th>
+                      <th class="py-2.5 px-3 text-right">GST Tax</th>
+                      <th class="py-2.5 px-3 text-right">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody id="csv-preview-tbody" class="divide-y divide-slate-100">
+                    <tr>
+                      <td colspan="6" class="py-12 px-4 text-center text-slate-400">
+                        No CSV staged yet. Drag & drop a vendor CSV on the left or click <strong>Load Sample CSV Preview</strong>.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- =====================================================================
+             VIEW 4: VENDOR RISK & DIRECTORY
+        ====================================================================== -->
+        <section id="view-vendors" class="hidden space-y-6">
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 class="text-base sm:text-lg font-bold text-slate-900">Vendor Compliance & Risk Directory</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Vendors are scored automatically based on mismatch frequency and Input Tax Credit (ITC) exposure.</p>
+            </div>
+            <div class="flex items-center gap-2 text-xs">
+              <span class="px-2.5 py-1 rounded-full font-semibold bg-rose-100 text-rose-700">● High Risk (≥40% mismatch or ≥₹10k ITC risk)</span>
+              <span class="px-2.5 py-1 rounded-full font-semibold bg-emerald-100 text-emerald-700">● Low Risk (100% matched)</span>
+            </div>
+          </div>
+
+          <div id="vendor-directory-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            <!-- Populated dynamically -->
+          </div>
+        </section>
+
+        <!-- =====================================================================
+             VIEW 5: LEVEL UP — FREEMIUM & SUBSCRIPTION PLANS PAGE
+        ====================================================================== -->
+        <section id="view-levelup" class="hidden -mx-4 sm:-mx-8 -my-6 px-4 sm:px-8 py-6 sm:py-10 bg-[#FAF9F6] min-h-[calc(100vh-4rem)]">
+          <div class="max-w-6xl mx-auto">
+
+            <!-- Top Back Arrow Bar (Matches Reference Screenshot) -->
+            <div class="flex items-center justify-between mb-6">
+              <button type="button" onclick="returnFromLevelUp()" class="inline-flex items-center gap-2 p-2 -ml-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-stone-200/60 transition-all cursor-pointer" title="Back to workspace">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                <span class="text-xs font-medium hidden sm:inline">Back to workspace</span>
+              </button>
+              <div class="flex items-center gap-2 text-xs text-stone-500">
+                <span>Current active plan:</span>
+                <span id="levelup-current-pill" class="px-2.5 py-0.5 rounded-full font-bold bg-stone-900 text-white uppercase tracking-wider text-[11px]">Free (₹0/mo)</span>
+              </div>
+            </div>
+
+            <!-- Editorial Headline & Segment Toggle -->
+            <div class="text-center max-w-2xl mx-auto space-y-5 mb-10">
+              <h1 class="font-editorial text-3xl sm:text-5xl font-medium text-stone-900 tracking-tight">
+                Plans that grow with you
+              </h1>
+
+              <!-- Segmented Audience Pill (Individual / CA & Enterprise) -->
+              <div class="inline-flex items-center p-1 rounded-xl bg-stone-200/70 border border-stone-300/70">
+                <button type="button" id="seg-individual" onclick="setLevelUpSegment('individual')" class="px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white text-stone-900 shadow-sm transition-all">
+                  Individual & SMEs
+                </button>
+                <button type="button" id="seg-enterprise" onclick="setLevelUpSegment('enterprise')" class="px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-stone-600 hover:text-stone-900 transition-all">
+                  CA Firms & Enterprise
+                </button>
+              </div>
+            </div>
+
+            <!-- 3-Column Pricing Cards Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+
+              <!-- CARD 1: FREE (₹0) -->
+              <div id="plan-card-FREE" class="bg-white rounded-2xl border border-stone-200/90 p-7 flex flex-col justify-between shadow-sm transition-all">
+                <div>
+                  <!-- Minimalist Botanical Sprout SVG (1-Node) -->
+                  <div class="w-12 h-12 mb-5 text-stone-800">
+                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="w-11 h-11">
+                      <circle cx="24" cy="14" r="5" />
+                      <circle cx="24" cy="14" r="1.5" fill="currentColor" />
+                      <line x1="24" y1="19" x2="24" y2="39" />
+                      <path d="M24 29 C18 29 15 24 15 24 C15 24 20 22 24 27" />
+                      <path d="M24 26 C30 26 33 21 33 21 C33 21 28 19 24 24" />
+                    </svg>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-2">
+                    <h3 class="text-2xl font-bold text-stone-900 tracking-tight">Free</h3>
+                    <span id="badge-active-FREE" class="hidden px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">Active Plan</span>
+                  </div>
+                  <p id="desc-plan-FREE" class="text-sm text-stone-500 mt-1">Get started with TaxSync GST</p>
+
+                  <!-- Price -->
+                  <div class="mt-6 mb-6">
+                    <div class="flex items-baseline gap-1">
+                      <span class="text-4xl font-bold text-stone-900 tracking-tight">₹0</span>
+                    </div>
+                    <p class="text-xs text-stone-400 mt-1">Free forever • No credit card required</p>
+                  </div>
+
+                  <!-- CTA Button -->
+                  <button id="btn-select-FREE" type="button" onclick="selectSubscriptionPlan('FREE')" class="w-full py-3 px-4 rounded-xl text-sm font-semibold bg-stone-100 hover:bg-stone-200 text-stone-900 border border-stone-200/80 transition-all cursor-pointer">
+                    Use TaxSync for free
+                  </button>
+                  <p class="text-[11px] text-center text-transparent mt-2 select-none">Spacer</p>
+
+                  <hr class="my-5 border-stone-200/80" />
+
+                  <!-- Checklist -->
+                  <ul class="space-y-3 text-sm text-stone-700">
+                    <li class="flex items-start gap-2.5">
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <span>Generate & compare up to <strong>15 bills / month</strong></span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <span>Automated CGST, SGST & IGST calculation</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <span>Basic invoice reconciliation & variance check</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <span>Printable GST Tax Invoice PDF & CSV export</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <span>Single taxpayer entity profile</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- CARD 2: PRO (₹399 / month) -->
+              <div id="plan-card-PRO" class="bg-white rounded-2xl border border-stone-200/90 p-7 flex flex-col justify-between shadow-sm transition-all">
+                <div>
+                  <!-- Top Row: Botanical 3-Node Icon + Billing Cycle Toggle Pill -->
+                  <div class="flex items-start justify-between gap-2 mb-5">
+                    <div class="w-12 h-12 text-stone-800">
+                      <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="w-11 h-11">
+                        <circle cx="24" cy="11" r="4.5" />
+                        <circle cx="14" cy="20" r="3.5" />
+                        <circle cx="34" cy="20" r="3.5" />
+                        <line x1="24" y1="15.5" x2="24" y2="39" />
+                        <path d="M24 27 L16.5 22.5" />
+                        <path d="M24 27 L31.5 22.5" />
+                        <path d="M24 34 C19 34 16 30 16 30" />
+                        <path d="M24 34 C29 34 32 30 32 30" />
+                      </svg>
+                    </div>
+
+                    <!-- Monthly / Yearly Save 17% Pill (Matches Screenshot) -->
+                    <div class="inline-flex items-center p-0.5 rounded-full bg-stone-100 border border-stone-200 text-[11px]">
+                      <button type="button" id="bill-cycle-monthly" onclick="setBillingCycle('monthly')" class="px-2.5 py-1 rounded-full font-semibold bg-white text-stone-900 shadow-xs transition-all cursor-pointer">
+                        Monthly
+                      </button>
+                      <button type="button" id="bill-cycle-yearly" onclick="setBillingCycle('yearly')" class="px-2.5 py-1 rounded-full font-medium text-indigo-600 hover:text-indigo-700 transition-all cursor-pointer">
+                        Yearly · Save 17%
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center justify-between gap-2">
+                    <h3 class="text-2xl font-bold text-stone-900 tracking-tight">Pro</h3>
+                    <span id="badge-active-PRO" class="hidden px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">Active Plan</span>
+                  </div>
+                  <p id="desc-plan-PRO" class="text-sm text-stone-500 mt-1">Reconcile faster & automate notices</p>
+
+                  <!-- Price -->
+                  <div class="mt-6 mb-6 flex items-center gap-2.5">
+                    <span id="price-display-PRO" class="text-4xl font-bold text-stone-900 tracking-tight">₹399</span>
+                    <div class="text-[11px] leading-tight text-stone-500">
+                      <span class="block font-medium text-stone-700">INR / month</span>
+                      <span id="billing-subtext-PRO">billed monthly (includes GST)</span>
+                    </div>
+                  </div>
+
+                  <!-- Dark Primary CTA Button -->
+                  <button id="btn-select-PRO" type="button" onclick="selectSubscriptionPlan('PRO')" class="w-full py-3 px-4 rounded-xl text-sm font-semibold bg-[#18181B] hover:bg-stone-800 text-white shadow-sm transition-all cursor-pointer">
+                    Get Pro plan
+                  </button>
+                  <p class="text-[11px] text-center text-stone-500 mt-2">No commitment · Cancel anytime</p>
+
+                  <hr class="my-5 border-stone-200/80" />
+
+                  <p class="text-xs font-semibold text-stone-900 mb-3">Everything in Free and:</p>
+                  <ul class="space-y-3 text-sm text-stone-700">
+                    <li class="flex items-start gap-2.5">
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <span>Generate & compare up to <strong>100 bills / month</strong></span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <span>Automated <strong>Rectification Mail Drafts</strong> for vendors</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <span>Direct <strong>GST Portal Filing</strong> helper & GSTR-3B readiness</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <span>Bulk Vendor CSV import & discrepancy audit exports</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <span>Priority ITC mismatch alerts</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- CARD 3: MAX & ENTERPRISE (₹599 / month — Recommended) -->
+              <div id="plan-card-MAX" class="bg-gradient-to-b from-[#F4F5FB] to-white rounded-2xl border border-indigo-200/90 p-7 flex flex-col justify-between shadow-md transition-all">
+                <div>
+                  <!-- Flourishing Multi-Node Botanical SVG -->
+                  <div class="w-12 h-12 mb-5 text-stone-800">
+                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="w-11 h-11">
+                      <circle cx="24" cy="9" r="4" />
+                      <circle cx="13" cy="16" r="3.5" />
+                      <circle cx="35" cy="16" r="3.5" />
+                      <circle cx="10" cy="27" r="3" />
+                      <circle cx="38" cy="27" r="3" />
+                      <line x1="24" y1="13" x2="24" y2="40" />
+                      <path d="M24 22 L16 17.5" />
+                      <path d="M24 22 L32 17.5" />
+                      <path d="M24 31 L13 27.5" />
+                      <path d="M24 31 L35 27.5" />
+                      <path d="M24 36 C19 36 17 33 17 33" />
+                      <path d="M24 36 C29 36 31 33 31 33" />
+                    </svg>
+                  </div>
+
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h3 class="text-2xl font-bold text-stone-900 tracking-tight">Max & Enterprise</h3>
+                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-100 text-indigo-700">Recommended</span>
+                    <span id="badge-active-MAX" class="hidden px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">Active Plan</span>
+                  </div>
+                  <p id="desc-plan-MAX" class="text-sm text-stone-500 mt-1">Unlimited bills, risk intelligence & full suite</p>
+
+                  <!-- Price -->
+                  <div class="mt-6 mb-6">
+                    <div class="flex items-baseline gap-1.5">
+                      <span id="price-display-MAX" class="text-4xl font-bold text-stone-900 tracking-tight">₹599</span>
+                    </div>
+                    <div class="text-[11px] leading-tight text-stone-500 mt-1">
+                      <span class="font-medium text-stone-700">INR / month</span> · <span id="billing-subtext-MAX">billed monthly (includes GST)</span>
+                    </div>
+                  </div>
+
+                  <!-- Dark Primary CTA Button -->
+                  <button id="btn-select-MAX" type="button" onclick="selectSubscriptionPlan('MAX')" class="w-full py-3 px-4 rounded-xl text-sm font-semibold bg-[#18181B] hover:bg-stone-800 text-white shadow-sm transition-all cursor-pointer">
+                    Get Max plan
+                  </button>
+                  <p class="text-[11px] text-center text-stone-500 mt-2">No commitment · Cancel anytime</p>
+
+                  <hr class="my-5 border-stone-200/80" />
+
+                  <p class="text-xs font-semibold text-stone-900 mb-3">Everything in Pro, plus:</p>
+                  <ul class="space-y-3 text-sm text-stone-700">
+                    <li class="flex items-start gap-2.5">
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <span><strong>Unlimited bills</strong> generation & reconciliation</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <span>Full <strong>Vendor Risk Analysis & Directory</strong> scoring</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <span>One-click bulk vendor discrepancy resolution notices</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                      <i data-lucide="check" class="w-4 h-4 text-stone-800 shrink-0 mt-0.5"></i>
+                      <span>All current & upcoming TaxSync GST compliance tools</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Footnote matching screenshot aesthetic -->
+            <div class="mt-10 text-center max-w-2xl mx-auto text-[11px] leading-relaxed text-stone-500 space-y-1">
+              <p>*Monthly bill generation and comparison quotas reset on the 1st of each calendar month. Prices are in INR and inclusive of applicable GST.</p>
+              <p>Upgrade or downgrade anytime with zero lock-in. Your existing GST invoices and taxpayer records remain preserved across plan changes.</p>
+            </div>
+
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       MODAL 1: RECTIFICATION EMAIL DRAFT MODAL
+  ====================================================================== -->
+  <div id="email-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[92vh]">
+      <!-- Modal Header -->
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center">
+            <i data-lucide="mail-warning" class="w-4 h-4 text-white"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold">Vendor GST Discrepancy Rectification Notice</h3>
+            <p class="text-xs text-slate-400">Auto-generated audit notice with invoice & tax variance breakdown</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('email-modal')" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 space-y-4 overflow-y-auto flex-1">
+        <!-- Multi-vendor warning & switcher -->
+        <div id="multi-vendor-warning" class="hidden p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 space-y-2">
+          <p class="font-semibold">Multiple vendors selected. Switch below to review each vendor's separate rectification draft:</p>
+          <div id="vendor-switcher-bar" class="hidden flex flex-wrap gap-2"></div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">To (Vendor Email)</label>
+            <input type="email" id="draft-email-to" class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">CC (Our GST Compliance Team)</label>
+            <input type="text" id="draft-email-cc" value="gst.compliance@apexenterprise.in" class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-600" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Subject</label>
+          <input type="text" id="draft-email-subject" class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Email Body (Editable)</label>
+          <textarea id="draft-email-body" rows="11" class="w-full p-3.5 text-xs font-mono leading-relaxed bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"></textarea>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+        <button type="button" onclick="closeModal('email-modal')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200 transition-all">
+          Close
+        </button>
+        <div class="flex flex-wrap items-center gap-2.5">
+          <button type="button" onclick="copyDraftEmailToClipboard()" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 shadow-sm transition-all">
+            <i data-lucide="copy" class="w-4 h-4"></i>
+            Copy Email Draft
+          </button>
+          <a id="mailto-launch-btn" href="#" target="_blank" class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-all">
+            <i data-lucide="send" class="w-4 h-4"></i>
+            Open in Mail Client ↗
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       MODAL 5: FEATURE / QUOTA UPGRADE PROMPT MODAL
+  ====================================================================== -->
+  <div id="upgradePromptModal" class="fixed inset-0 z-[65] hidden bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full overflow-hidden">
+      <div class="px-6 py-5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-start justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-300 shrink-0">
+            <i data-lucide="sparkles" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <span id="upgrade-modal-tier-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-400/20 text-amber-300">Pro Feature</span>
+            <h3 id="upgrade-modal-title" class="text-base font-bold mt-1">Upgrade to Unlock</h3>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal('upgradePromptModal')" class="p-1 rounded-lg text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="p-6 space-y-4">
+        <p id="upgrade-modal-desc" class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+          You have reached your current plan limit. Level up to unlock higher monthly bill quotas, automated mail drafts, GST portal filing, and vendor risk intelligence.
+        </p>
+        <div id="upgrade-modal-highlight" class="p-3.5 rounded-xl bg-indigo-50/80 border border-indigo-100 text-xs text-indigo-950 space-y-1">
+          <!-- Populated dynamically -->
+        </div>
+        <div class="flex items-center justify-end gap-2.5 pt-2">
+          <button type="button" onclick="closeModal('upgradePromptModal')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">
+            Maybe Later
+          </button>
+          <button type="button" onclick="goToLevelUpFromPrompt()" class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold bg-stone-900 hover:bg-stone-800 text-white shadow-sm transition-all cursor-pointer">
+            <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+            View Plans & Level Up
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       APPLICATION JAVASCRIPT ENGINE
+  ====================================================================== -->
+  <script>
+    // -------------------------------------------------------------------------
+    // 1. STATE & DEMO DATASET (Realistic Indian B2B GST Invoices)
+    // -------------------------------------------------------------------------
+    const STORAGE_KEYS = {
+      RECONCIL_BUNDLE: 'taxsync_gst_reconcil_v1',
+      OUR_BILLS: 'taxsync_gst_our_bills_v1',
+      VENDOR_BILLS: 'taxsync_gst_vendor_bills_v1',
+      TAXPAYER_ENTITY: 'taxsync_gst_taxpayer_entity_v1',
+      SUBSCRIPTION_PLAN: 'taxsync_gst_plan_v1'
+    };
+
+    const SUBSCRIPTION_PLANS = {
+      FREE: {
+        id: 'FREE',
+        name: 'Free',
+        monthlyPrice: 0,
+        yearlyMonthlyPrice: 0,
+        billLimit: 15,
+        hasMailDraft: false,
+        hasGstFiling: false,
+        hasRiskAnalysis: false,
+        summaryText: 'Free Plan • 15 bills/mo'
+      },
+      PRO: {
+        id: 'PRO',
+        name: 'Pro',
+        monthlyPrice: 399,
+        yearlyMonthlyPrice: 331,
+        billLimit: 100,
+        hasMailDraft: true,
+        hasGstFiling: true,
+        hasRiskAnalysis: false,
+        summaryText: 'Pro (₹399/mo) • 100 bills/mo'
+      },
+      MAX: {
+        id: 'MAX',
+        name: 'Max & Enterprise',
+        monthlyPrice: 599,
+        yearlyMonthlyPrice: 497,
+        billLimit: Infinity,
+        hasMailDraft: true,
+        hasGstFiling: true,
+        hasRiskAnalysis: true,
+        summaryText: 'Max (₹599/mo) • Unlimited'
+      }
+    };
+
+    let currentPlanId = 'FREE';
+    let levelUpBillingCycle = 'monthly';
+    let levelUpSegment = 'individual';
+    let lastActiveTab = 'dashboard';
+
+    function cloneDefaultData(data) {
+      return JSON.parse(JSON.stringify(data));
+    }
+
+    const STATE_CODE_MAP = {
+      '07': '07-Delhi',
+      '09': '09-Uttar Pradesh',
+      '19': '19-West Bengal',
+      '24': '24-Gujarat',
+      '27': '27-Maharashtra',
+      '29': '29-Karnataka',
+      '32': '32-Kerala',
+      '33': '33-Tamil Nadu',
+      '36': '36-Telangana'
+    };
+
+    const DEFAULT_TAXPAYER_ENTITY = {
+      name: 'Apex Enterprise Solutions Pvt Ltd',
+      tradeName: 'Apex Enterprise Solutions',
+      gstin: '27AABCA8921F1Z5',
+      state: '27-Maharashtra',
+      address: 'Plot 42, MIDC Andheri East, Mumbai, Maharashtra 400093',
+      signatory: 'Rajesh Sharma (Authorized Signatory)',
+      email: 'gst.compliance@apexenterprise.in',
+      phone: '+91 22 4098 7120',
+      financialYear: 'FY 2026-27'
+    };
+
+    let OUR_ENTITY = cloneDefaultData(DEFAULT_TAXPAYER_ENTITY);
+
+    const DEFAULT_OUR_BILLS = [
+      {
+        invoiceNo: 'INV-2026-101',
+        invoiceDate: '2026-10-05',
+        supplyType: 'INTRA',
+        vendorName: 'Sai Precision Components Pvt Ltd',
+        vendorGstin: '27AAJCS4412K1Z8',
+        vendorEmail: 'billing@saiprecision.in',
+        vendorState: '27-Maharashtra',
+        items: [
+          { description: 'CNC Machined Steel Shafts', hsn: '8483', qty: 50, rate: 1200, gstRate: 18 }
+        ],
+        taxableValue: 60000,
+        cgst: 5400,
+        sgst: 5400,
+        igst: 0,
+        totalAmount: 70800
+      },
+      {
+        invoiceNo: 'INV-2026-102',
+        invoiceDate: '2026-10-08',
+        supplyType: 'INTER',
+        vendorName: 'Kaveri Cloud & Server Systems',
+        vendorGstin: '29AABCK7721M1Z2',
+        vendorEmail: 'ar.gst@kavericloud.co.in',
+        vendorState: '29-Karnataka',
+        items: [
+          { description: 'Enterprise Rack Server Hosting', hsn: '9983', qty: 1, rate: 125000, gstRate: 18 }
+        ],
+        taxableValue: 125000,
+        cgst: 0,
+        sgst: 0,
+        igst: 22500,
+        totalAmount: 147500
+      },
+      {
+        invoiceNo: 'INV-2026-103',
+        invoiceDate: '2026-10-12',
+        supplyType: 'INTRA',
+        vendorName: 'Metro Packaging & Polymers',
+        vendorGstin: '27AADCM9012P1Z4',
+        vendorEmail: 'accounts@metropack.in',
+        vendorState: '27-Maharashtra',
+        items: [
+          { description: 'Corrugated Export Boxes (5-Ply)', hsn: '4819', qty: 1000, rate: 45, gstRate: 12 }
+        ],
+        taxableValue: 45000,
+        cgst: 2700,
+        sgst: 2700,
+        igst: 0,
+        totalAmount: 50400
+      },
+      {
+        invoiceNo: 'INV-2026-104',
+        invoiceDate: '2026-10-15',
+        supplyType: 'INTER',
+        vendorName: 'Kaveri Cloud & Server Systems',
+        vendorGstin: '29AABCK7721M1Z2',
+        vendorEmail: 'ar.gst@kavericloud.co.in',
+        vendorState: '29-Karnataka',
+        items: [
+          { description: 'Managed Firewall Security License', hsn: '9983', qty: 2, rate: 30000, gstRate: 18 }
+        ],
+        taxableValue: 60000,
+        cgst: 0,
+        sgst: 0,
+        igst: 10800,
+        totalAmount: 70800
+      },
+      {
+        invoiceNo: 'INV-2026-105',
+        invoiceDate: '2026-10-19',
+        supplyType: 'INTER',
+        vendorName: 'Gujarat Industrial Switchgear',
+        vendorGstin: '24AAACG5519R1Z9',
+        vendorEmail: 'taxdesk@gujaratswitchgear.com',
+        vendorState: '24-Gujarat',
+        items: [
+          { description: '3-Phase Industrial Control Panels', hsn: '8537', qty: 4, rate: 40000, gstRate: 18 }
+        ],
+        taxableValue: 160000,
+        cgst: 0,
+        sgst: 0,
+        igst: 28800,
+        totalAmount: 188800
+      },
+      {
+        invoiceNo: 'INV-2026-106',
+        invoiceDate: '2026-10-22',
+        supplyType: 'INTRA',
+        vendorName: 'Sai Precision Components Pvt Ltd',
+        vendorGstin: '27AAJCS4412K1Z8',
+        vendorEmail: 'billing@saiprecision.in',
+        vendorState: '27-Maharashtra',
+        items: [
+          { description: 'Industrial Brass Valves', hsn: '8481', qty: 100, rate: 350, gstRate: 18 }
+        ],
+        taxableValue: 35000,
+        cgst: 3150,
+        sgst: 3150,
+        igst: 0,
+        totalAmount: 41300
+      },
+      {
+        invoiceNo: 'INV-2026-107',
+        invoiceDate: '2026-10-25',
+        supplyType: 'INTER',
+        vendorName: 'Deccan Logistics & Freight',
+        vendorGstin: '36AABCD3188L1Z1',
+        vendorEmail: 'gst@deccanfreight.in',
+        vendorState: '36-Telangana',
+        items: [
+          { description: 'Inter-State Container Haulage', hsn: '9965', qty: 5, rate: 16000, gstRate: 5 }
+        ],
+        taxableValue: 80000,
+        cgst: 0,
+        sgst: 0,
+        igst: 4000,
+        totalAmount: 84000
+      }
+    ];
+
+    // Vendor CSV data (includes exact matches, tax mismatch, GSTIN typo, missing bill, and an unrecorded bill)
+    const DEFAULT_VENDOR_BILLS = [
+      {
+        invoiceNo: 'INV-2026-101',
+        invoiceDate: '2026-10-05',
+        vendorName: 'Sai Precision Components Pvt Ltd',
+        vendorGstin: '27AAJCS4412K1Z8',
+        vendorEmail: 'billing@saiprecision.in',
+        taxableValue: 60000,
+        cgst: 5400,
+        sgst: 5400,
+        igst: 0,
+        totalAmount: 70800
+      },
+      {
+        invoiceNo: 'INV-2026-102',
+        invoiceDate: '2026-10-08',
+        vendorName: 'Kaveri Cloud & Server Systems',
+        vendorGstin: '29AABCK7721M1Z2',
+        vendorEmail: 'ar.gst@kavericloud.co.in',
+        taxableValue: 110000,
+        cgst: 0,
+        sgst: 0,
+        igst: 19800,
+        totalAmount: 129800
+      },
+      {
+        invoiceNo: 'INV-2026-103',
+        invoiceDate: '2026-10-12',
+        vendorName: 'Metro Packaging & Polymers',
+        vendorGstin: '27AADCM9012P1Z4',
+        vendorEmail: 'accounts@metropack.in',
+        taxableValue: 45000,
+        cgst: 2700,
+        sgst: 2700,
+        igst: 0,
+        totalAmount: 50400
+      },
+      {
+        invoiceNo: 'INV-2026-104',
+        invoiceDate: '2026-10-18',
+        vendorName: 'Kaveri Cloud & Server Systems',
+        vendorGstin: '29AABCK7721M1Z9',
+        vendorEmail: 'ar.gst@kavericloud.co.in',
+        taxableValue: 60000,
+        cgst: 0,
+        sgst: 0,
+        igst: 10800,
+        totalAmount: 70800
+      },
+      {
+        invoiceNo: 'INV-2026-106',
+        invoiceDate: '2026-10-22',
+        vendorName: 'Sai Precision Components Pvt Ltd',
+        vendorGstin: '27AAJCS4412K1Z8',
+        vendorEmail: 'billing@saiprecision.in',
+        taxableValue: 35000,
+        cgst: 3150,
+        sgst: 3150,
+        igst: 0,
+        totalAmount: 41300
+      },
+      {
+        invoiceNo: 'INV-2026-107',
+        invoiceDate: '2026-10-25',
+        vendorName: 'Deccan Logistics & Freight',
+        vendorGstin: '36AABCD3188L1Z1',
+        vendorEmail: 'gst@deccanfreight.in',
+        taxableValue: 80000,
+        cgst: 0,
+        sgst: 0,
+        igst: 4000,
+        totalAmount: 84000
+      },
+      {
+        invoiceNo: 'INV-2026-999',
+        invoiceDate: '2026-10-27',
+        vendorName: 'Metro Packaging & Polymers',
+        vendorGstin: '27AADCM9012P1Z4',
+        vendorEmail: 'accounts@metropack.in',
+        taxableValue: 18000,
+        cgst: 1080,
+        sgst: 1080,
+        igst: 0,
+        totalAmount: 20160
+      }
+    ];
+
+    let ourBills = [];
+    let vendorBills = [];
+    let reconciledRecords = [];
+    let vendorRiskMap = {};
+    let selectedDiscrepancyKeys = new Set();
+    let stagedCsvRows = [];
+
+    // -------------------------------------------------------------------------
+    // 2. INITIALIZATION & LOCALSTORAGE PERSISTENCE
+    // -------------------------------------------------------------------------
+    document.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      setupEntityEditor();
+      applyTaxpayerEntityToUI();
+      applySubscriptionPlanToUI();
+      setupNavigation();
+      setupBillForm();
+      setupCsvUpload();
+      loadDefaultStagedVendorCSV();
+      setupFilters();
+      setupModalDismissHandlers();
+      runReconciliation();
+      refreshIcons();
+    });
+
+    function refreshIcons() {
+      if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+      }
+    }
+
+    function loadState() {
+      try {
+        const savedPlan = localStorage.getItem(STORAGE_KEYS.SUBSCRIPTION_PLAN);
+        if (savedPlan && SUBSCRIPTION_PLANS[savedPlan]) {
+          currentPlanId = savedPlan;
+        } else {
+          currentPlanId = 'FREE';
+        }
+
+        const savedBundleRaw = localStorage.getItem(STORAGE_KEYS.RECONCIL_BUNDLE);
+        const savedBundle = savedBundleRaw ? JSON.parse(savedBundleRaw) : null;
+        const savedEntity = savedBundle?.taxpayerEntity
+          ? savedBundle.taxpayerEntity
+          : (localStorage.getItem(STORAGE_KEYS.TAXPAYER_ENTITY) ? JSON.parse(localStorage.getItem(STORAGE_KEYS.TAXPAYER_ENTITY)) : null);
+        const savedOur = savedBundle?.ourBills
+          ? savedBundle.ourBills
+          : (localStorage.getItem(STORAGE_KEYS.OUR_BILLS) ? JSON.parse(localStorage.getItem(STORAGE_KEYS.OUR_BILLS)) : null);
+        const savedVendor = savedBundle?.vendorBills
+          ? savedBundle.vendorBills
+          : (localStorage.getItem(STORAGE_KEYS.VENDOR_BILLS) ? JSON.parse(localStorage.getItem(STORAGE_KEYS.VENDOR_BILLS)) : null);
+
+        OUR_ENTITY = savedEntity
+          ? { ...cloneDefaultData(DEFAULT_TAXPAYER_ENTITY), ...savedEntity }
+          : cloneDefaultData(DEFAULT_TAXPAYER_ENTITY);
+        ourBills = Array.isArray(savedOur) ? savedOur : cloneDefaultData(DEFAULT_OUR_BILLS);
+        vendorBills = Array.isArray(savedVendor) ? savedVendor : cloneDefaultData(DEFAULT_VENDOR_BILLS);
+      } catch (e) {
+        console.error('Failed reading LocalStorage, falling back to demo data', e);
+        currentPlanId = 'FREE';
+        OUR_ENTITY = cloneDefaultData(DEFAULT_TAXPAYER_ENTITY);
+        ourBills = cloneDefaultData(DEFAULT_OUR_BILLS);
+        vendorBills = cloneDefaultData(DEFAULT_VENDOR_BILLS);
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEYS.SUBSCRIPTION_PLAN, currentPlanId);
+        localStorage.setItem(STORAGE_KEYS.TAXPAYER_ENTITY, JSON.stringify(OUR_ENTITY));
+        localStorage.setItem(STORAGE_KEYS.OUR_BILLS, JSON.stringify(ourBills));
+        localStorage.setItem(STORAGE_KEYS.VENDOR_BILLS, JSON.stringify(vendorBills));
+        localStorage.setItem(STORAGE_KEYS.RECONCIL_BUNDLE, JSON.stringify({
+          taxpayerEntity: OUR_ENTITY,
+          ourBills,
+          vendorBills
+        }));
+      } catch (e) {
+        console.error('Failed saving state to LocalStorage', e);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // 2A. FREEMIUM MONETIZATION, QUOTA METERING & LEVEL UP ENGINE
+    // -------------------------------------------------------------------------
+    function getActivePlan() {
+      return SUBSCRIPTION_PLANS[currentPlanId] || SUBSCRIPTION_PLANS.FREE;
+    }
+
+    function getMonthlyBillUsageCount() {
+      // Unique invoices generated or compared across our ledger and vendor comparison dataset
+      const uniqueInvoices = new Set([
+        ...ourBills.map(b => (b.invoiceNo || '').trim().toUpperCase()),
+        ...vendorBills.map(b => (b.invoiceNo || '').trim().toUpperCase())
+      ]);
+      uniqueInvoices.delete('');
+      return uniqueInvoices.size;
+    }
+
+    function selectSubscriptionPlan(planId) {
+      if (!SUBSCRIPTION_PLANS[planId]) return;
+      currentPlanId = planId;
+      saveState();
+      applySubscriptionPlanToUI();
+      runReconciliation();
+
+      const plan = getActivePlan();
+      const priceStr = plan.monthlyPrice === 0 ? '₹0/month' : `₹${plan.monthlyPrice}/month`;
+      showToast(`Activated ${plan.name} plan (${priceStr})! Features updated.`, 'success');
+    }
+
+    function setBillingCycle(cycle) {
+      levelUpBillingCycle = cycle;
+      const btnMonthly = document.getElementById('bill-cycle-monthly');
+      const btnYearly = document.getElementById('bill-cycle-yearly');
+      const pricePro = document.getElementById('price-display-PRO');
+      const subPro = document.getElementById('billing-subtext-PRO');
+      const priceMax = document.getElementById('price-display-MAX');
+      const subMax = document.getElementById('billing-subtext-MAX');
+
+      if (cycle === 'yearly') {
+        btnYearly.className = 'px-2.5 py-1 rounded-full font-semibold bg-white text-indigo-700 shadow-xs transition-all cursor-pointer';
+        btnMonthly.className = 'px-2.5 py-1 rounded-full font-medium text-stone-600 hover:text-stone-900 transition-all cursor-pointer';
+        pricePro.textContent = '₹331';
+        subPro.textContent = 'billed yearly at ₹3,972 (save 17%)';
+        priceMax.textContent = '₹497';
+        subMax.textContent = 'billed yearly at ₹5,964 (save 17%)';
+      } else {
+        btnMonthly.className = 'px-2.5 py-1 rounded-full font-semibold bg-white text-stone-900 shadow-xs transition-all cursor-pointer';
+        btnYearly.className = 'px-2.5 py-1 rounded-full font-medium text-indigo-600 hover:text-indigo-700 transition-all cursor-pointer';
+        pricePro.textContent = '₹399';
+        subPro.textContent = 'billed monthly (includes GST)';
+        priceMax.textContent = '₹599';
+        subMax.textContent = 'billed monthly (includes GST)';
+      }
+    }
+
+    function setLevelUpSegment(seg) {
+      levelUpSegment = seg;
+      const btnInd = document.getElementById('seg-individual');
+      const btnEnt = document.getElementById('seg-enterprise');
+      const descFree = document.getElementById('desc-plan-FREE');
+      const descPro = document.getElementById('desc-plan-PRO');
+      const descMax = document.getElementById('desc-plan-MAX');
+
+      if (seg === 'enterprise') {
+        btnEnt.className = 'px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white text-stone-900 shadow-sm transition-all';
+        btnInd.className = 'px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-stone-600 hover:text-stone-900 transition-all';
+        descFree.textContent = 'Evaluate TaxSync for single-client trials';
+        descPro.textContent = 'For boutique tax practitioners & consultants';
+        descMax.textContent = 'Built for CA firms & high-volume GST teams';
+      } else {
+        btnInd.className = 'px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white text-stone-900 shadow-sm transition-all';
+        btnEnt.className = 'px-4 py-1.5 rounded-lg text-xs sm:text-sm font-medium text-stone-600 hover:text-stone-900 transition-all';
+        descFree.textContent = 'Get started with TaxSync GST';
+        descPro.textContent = 'Reconcile faster & automate notices';
+        descMax.textContent = 'Unlimited bills, risk intelligence & full suite';
+      }
+    }
+
+    function applySubscriptionPlanToUI() {
+      const plan = getActivePlan();
+      const used = getMonthlyBillUsageCount();
+      const limitLabel = plan.billLimit === Infinity ? 'Unlimited' : plan.billLimit;
+
+      // Sidebar & Header badges
+      const sidebarBadge = document.getElementById('sidebar-plan-badge');
+      if (sidebarBadge) sidebarBadge.textContent = plan.id;
+
+      const headerTag = document.getElementById('header-plan-tag');
+      if (headerTag) headerTag.textContent = plan.id;
+
+      const usageText = document.getElementById('sidebar-usage-text');
+      if (usageText) usageText.textContent = `${used} / ${limitLabel}`;
+
+      const usageBar = document.getElementById('sidebar-usage-bar');
+      if (usageBar) {
+        if (plan.billLimit === Infinity) {
+          usageBar.style.width = '100%';
+          usageBar.className = 'h-full bg-emerald-500 rounded-full transition-all duration-300';
+        } else {
+          const pct = Math.min(100, Math.round((used / plan.billLimit) * 100));
+          usageBar.style.width = `${pct}%`;
+          usageBar.className = `h-full rounded-full transition-all duration-300 ${pct >= 90 ? 'bg-rose-500' : pct >= 70 ? 'bg-amber-500' : 'bg-indigo-500'}`;
+        }
+      }
+
+      const planSummary = document.getElementById('sidebar-plan-summary');
+      if (planSummary) planSummary.textContent = plan.summaryText;
+
+      // Vendor Risk nav lock badge
+      const vendorLockBadge = document.getElementById('nav-vendor-lock-badge');
+      if (vendorLockBadge) {
+        if (plan.hasRiskAnalysis) vendorLockBadge.classList.add('hidden');
+        else vendorLockBadge.classList.remove('hidden');
+      }
+
+      // Level Up page active state indicators
+      const currentPill = document.getElementById('levelup-current-pill');
+      if (currentPill) {
+        currentPill.textContent = `${plan.name} (₹${plan.monthlyPrice}/mo)`;
+      }
+
+      ['FREE', 'PRO', 'MAX'].forEach(pid => {
+        const isCurrent = pid === plan.id;
+        const badge = document.getElementById(`badge-active-${pid}`);
+        const btn = document.getElementById(`btn-select-${pid}`);
+        const card = document.getElementById(`plan-card-${pid}`);
+
+        if (badge) {
+          if (isCurrent) badge.classList.remove('hidden');
+          else badge.classList.add('hidden');
+        }
+
+        if (card) {
+          if (isCurrent) {
+            card.classList.add('ring-2', 'ring-stone-900');
+          } else {
+            card.classList.remove('ring-2', 'ring-stone-900');
+          }
+        }
+
+        if (btn) {
+          if (isCurrent) {
+            btn.textContent = 'Current Active Plan';
+            btn.className = 'w-full py-3 px-4 rounded-xl text-sm font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 cursor-default';
+          } else if (pid === 'FREE') {
+            btn.textContent = 'Use TaxSync for free';
+            btn.className = 'w-full py-3 px-4 rounded-xl text-sm font-semibold bg-stone-100 hover:bg-stone-200 text-stone-900 border border-stone-200/80 transition-all cursor-pointer';
+          } else if (pid === 'PRO') {
+            btn.textContent = 'Get Pro plan';
+            btn.className = 'w-full py-3 px-4 rounded-xl text-sm font-semibold bg-[#18181B] hover:bg-stone-800 text-white shadow-sm transition-all cursor-pointer';
+          } else {
+            btn.textContent = 'Get Max plan';
+            btn.className = 'w-full py-3 px-4 rounded-xl text-sm font-semibold bg-[#18181B] hover:bg-stone-800 text-white shadow-sm transition-all cursor-pointer';
+          }
+        }
+      });
+    }
+
+    function openUpgradePrompt({ tierBadge, title, description, highlightHtml }) {
+      document.getElementById('upgrade-modal-tier-badge').textContent = tierBadge;
+      document.getElementById('upgrade-modal-title').textContent = title;
+      document.getElementById('upgrade-modal-desc').textContent = description;
+      document.getElementById('upgrade-modal-highlight').innerHTML = highlightHtml;
+      openModal('upgradePromptModal');
+    }
+
+    function goToLevelUpFromPrompt() {
+      closeModal('upgradePromptModal');
+      switchTab('levelup');
+    }
+
+    function returnFromLevelUp() {
+      const target = lastActiveTab && lastActiveTab !== 'levelup' ? lastActiveTab : 'dashboard';
+      switchTab(target);
+    }
+
+    // -------------------------------------------------------------------------
+    // 2B. TAXPAYER ENTITY DETAILS EDITOR & GLOBAL SYNC
+    // -------------------------------------------------------------------------
+    function ensureEntityModalExists() {
+      let modal = document.getElementById('entityModal');
+      if (modal) return modal;
+
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = `
+        <div id="entityModal" class="fixed inset-0 z-[60] hidden bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4">
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[92vh]">
+            <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center">
+                  <i data-lucide="building-2" class="w-4 h-4 text-white"></i>
+                </div>
+                <div>
+                  <h3 class="text-base font-bold">Edit Taxpayer Entity Details</h3>
+                  <p class="text-xs text-slate-400">Updates apply across invoices, reconciliation checks, and vendor emails</p>
+                </div>
+              </div>
+              <button type="button" onclick="closeModal('entityModal')" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+                <i data-lucide="x" class="w-5 h-5"></i>
+              </button>
+            </div>
+            <form id="taxpayer-entity-form" class="p-6 space-y-4 overflow-y-auto flex-1">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Legal Name (As per GST Certificate) *</label>
+                  <input type="text" id="entityLegalName" required class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Trade Name *</label>
+                  <input type="text" id="entityTradeName" required class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Taxpayer GSTIN (15-Character) *</label>
+                  <input type="text" id="entityGstin" required maxlength="15" class="w-full px-3.5 py-2 text-sm uppercase font-mono bg-slate-50 border border-slate-200 rounded-xl" />
+                  <p id="entity-gstin-hint" class="text-[11px] text-slate-400 mt-1">State code auto-syncs from first 2 digits</p>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">State / Place of Supply Code *</label>
+                  <select id="entityState" class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl">
+                    <option value="07-Delhi">07 - Delhi</option>
+                    <option value="09-Uttar Pradesh">09 - Uttar Pradesh</option>
+                    <option value="19-West Bengal">19 - West Bengal</option>
+                    <option value="24-Gujarat">24 - Gujarat</option>
+                    <option value="27-Maharashtra">27 - Maharashtra</option>
+                    <option value="29-Karnataka">29 - Karnataka</option>
+                    <option value="32-Kerala">32 - Kerala</option>
+                    <option value="33-Tamil Nadu">33 - Tamil Nadu</option>
+                    <option value="36-Telangana">36 - Telangana</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Authorized Signatory *</label>
+                  <input type="text" id="entitySignatory" required class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Financial Year</label>
+                  <input type="text" id="entityFy" required class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Compliance Email *</label>
+                  <input type="email" id="entityEmail" required class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Contact Phone *</label>
+                  <input type="text" id="entityPhone" required class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl" />
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Registered Principal Place of Business Address *</label>
+                <textarea id="entityAddress" rows="2" required class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl"></textarea>
+              </div>
+              <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button type="button" onclick="closeModal('entityModal')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">Cancel</button>
+                <button type="submit" class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm">Save Taxpayer Profile</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(wrapper.firstElementChild);
+      setupEntityEditor();
+      return document.getElementById('entityModal');
+    }
+
+    function setupEntityEditor() {
+      const gstinInput = document.getElementById('entityGstin');
+      const stateSelect = document.getElementById('entityState');
+      const hint = document.getElementById('entity-gstin-hint');
+      const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+
+      if (gstinInput && stateSelect && hint && !gstinInput.dataset.bound) {
+        gstinInput.dataset.bound = 'true';
+        gstinInput.addEventListener('input', (e) => {
+          const val = e.target.value.toUpperCase().trim();
+          e.target.value = val;
+
+          if (val.length >= 2) {
+            const prefix = val.slice(0, 2);
+            if (STATE_CODE_MAP[prefix]) {
+              stateSelect.value = STATE_CODE_MAP[prefix];
+            }
+          }
+
+          if (val.length === 0) {
+            hint.textContent = 'State code auto-syncs from first 2 digits';
+            hint.className = 'text-[11px] text-slate-400 mt-1';
+          } else if (gstinRegex.test(val)) {
+            hint.textContent = `✓ Valid 15-char GSTIN • State Code ${val.slice(0, 2)} synced`;
+            hint.className = 'text-[11px] text-emerald-600 font-medium mt-1';
+          } else {
+            hint.textContent = `Must match 15-char GSTIN format (${val.length}/15 chars)`;
+            hint.className = 'text-[11px] text-amber-600 mt-1';
+          }
+        });
+
+        stateSelect.addEventListener('change', () => {
+          const newCode = stateSelect.value.slice(0, 2);
+          const curGstin = gstinInput.value.toUpperCase().trim();
+          if (curGstin.length >= 2 && /^[0-9]{2}$/.test(newCode)) {
+            gstinInput.value = newCode + curGstin.slice(2);
+            gstinInput.dispatchEvent(new Event('input'));
+          }
+        });
+      }
+
+      const entityForm = document.getElementById('taxpayer-entity-form');
+      if (entityForm && !entityForm.dataset.bound) {
+        entityForm.dataset.bound = 'true';
+        entityForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const gstin = (document.getElementById('entityGstin')?.value || '').toUpperCase().trim();
+          if (!gstinRegex.test(gstin)) {
+            showToast('Please enter a valid 15-character Taxpayer GSTIN (e.g., 27AABCA8921F1Z5).', 'error');
+            return;
+          }
+
+          const stateVal = document.getElementById('entityState')?.value || '27-Maharashtra';
+          if (!gstin.startsWith(stateVal.slice(0, 2))) {
+            showToast('First 2 digits of Taxpayer GSTIN must match the selected State Code.', 'error');
+            return;
+          }
+
+          OUR_ENTITY = {
+            name: (document.getElementById('entityLegalName')?.value || '').trim(),
+            tradeName: (document.getElementById('entityTradeName')?.value || '').trim(),
+            gstin,
+            state: stateVal,
+            signatory: (document.getElementById('entitySignatory')?.value || '').trim(),
+            financialYear: (document.getElementById('entityFy')?.value || '').trim() || 'FY 2026-27',
+            email: (document.getElementById('entityEmail')?.value || '').trim(),
+            phone: (document.getElementById('entityPhone')?.value || '').trim(),
+            address: (document.getElementById('entityAddress')?.value || '').trim()
+          };
+
+          saveState();
+          applyTaxpayerEntityToUI();
+          runReconciliation();
+          closeModal('entityModal');
+          showToast(`Updated Taxpayer Entity: ${OUR_ENTITY.name} (${OUR_ENTITY.gstin})`, 'success');
+        });
+      }
+    }
+
+    function openEntityEditorModal() {
+      ensureEntityModalExists();
+      // If mobile sidebar drawer is open, close it so modal is cleanly focused
+      const sb = document.getElementById('sidebar');
+      if (sb && !sb.classList.contains('hidden') && window.innerWidth < 1024) {
+        sb.classList.add('hidden');
+      }
+
+      const legalNameEl = document.getElementById('entityLegalName');
+      if (!legalNameEl) return;
+
+      legalNameEl.value = OUR_ENTITY.name || '';
+      document.getElementById('entityTradeName').value = OUR_ENTITY.tradeName || OUR_ENTITY.name || '';
+      const gstinEl = document.getElementById('entityGstin');
+      gstinEl.value = OUR_ENTITY.gstin || '';
+      document.getElementById('entityState').value = OUR_ENTITY.state || '27-Maharashtra';
+      document.getElementById('entitySignatory').value = OUR_ENTITY.signatory || '';
+      document.getElementById('entityFy').value = OUR_ENTITY.financialYear || 'FY 2026-27';
+      document.getElementById('entityEmail').value = OUR_ENTITY.email || '';
+      document.getElementById('entityPhone').value = OUR_ENTITY.phone || '';
+      document.getElementById('entityAddress').value = OUR_ENTITY.address || '';
+      gstinEl.dispatchEvent(new Event('input'));
+
+      openModal('entityModal');
+      setTimeout(() => legalNameEl.focus(), 50);
+    }
+
+    function applyTaxpayerEntityToUI() {
+      const [stCode, stName] = (OUR_ENTITY.state || '27-Maharashtra').split('-');
+      const sidebarName = document.getElementById('sidebar-entity-name');
+      if (sidebarName) sidebarName.textContent = OUR_ENTITY.name;
+
+      const sidebarTrade = document.getElementById('sidebar-entity-trade');
+      if (sidebarTrade) sidebarTrade.textContent = `Trade: ${OUR_ENTITY.tradeName || OUR_ENTITY.name}`;
+
+      const sidebarGstin = document.getElementById('sidebar-entity-gstin');
+      if (sidebarGstin) sidebarGstin.textContent = OUR_ENTITY.gstin;
+
+      const sidebarStateFy = document.getElementById('sidebar-entity-state-fy');
+      if (sidebarStateFy) sidebarStateFy.textContent = `State: ${stName || 'Maharashtra'} (${stCode}) • ${OUR_ENTITY.financialYear || 'FY 2026-27'}`;
+
+      const headerPill = document.getElementById('header-entity-pill');
+      if (headerPill) headerPill.textContent = OUR_ENTITY.gstin;
+
+      // Sync Generate GST Bill banner & default supply type rule
+      const formEntityName = document.getElementById('bill-form-entity-name');
+      if (formEntityName) {
+        formEntityName.textContent = `${OUR_ENTITY.name}${OUR_ENTITY.tradeName && OUR_ENTITY.tradeName !== OUR_ENTITY.name ? ` (${OUR_ENTITY.tradeName})` : ''}`;
+        document.getElementById('bill-form-entity-gstin').textContent = OUR_ENTITY.gstin;
+        document.getElementById('bill-form-entity-state-badge').textContent = OUR_ENTITY.state;
+        document.getElementById('bill-form-entity-contact').textContent = `${OUR_ENTITY.email}${OUR_ENTITY.phone ? ` • ${OUR_ENTITY.phone}` : ''}`;
+
+        const vendorStateSelect = document.getElementById('bill-vendor-state');
+        const supplyTypeSelect = document.getElementById('bill-supply-type');
+        if (vendorStateSelect && supplyTypeSelect) {
+          supplyTypeSelect.value = vendorStateSelect.value.startsWith(stCode) ? 'INTRA' : 'INTER';
+          recalculateBillFormTotals();
+        }
+      }
+
+      // Sync default CC in rectification email modal
+      const ccInput = document.getElementById('draft-email-cc');
+      if (ccInput) {
+        ccInput.value = OUR_ENTITY.email;
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // 3. RECONCILIATION & VENDOR RISK SCORING ENGINE
+    // -------------------------------------------------------------------------
+    function runReconciliation() {
+      const results = [];
+      const vendorMap = new Map();
+
+      vendorBills.forEach(vb => {
+        vendorMap.set(vb.invoiceNo.trim().toUpperCase(), vb);
+      });
+
+      const processedInvoices = new Set();
+
+      // Step A: Iterate through Our GST Bills and compare with Vendor Bills
+      ourBills.forEach(ob => {
+        const key = ob.invoiceNo.trim().toUpperCase();
+        processedInvoices.add(key);
+        const vb = vendorMap.get(key);
+
+        const ourTax = round2((ob.cgst || 0) + (ob.sgst || 0) + (ob.igst || 0));
+
+        if (!vb) {
+          const severity = ourTax >= 15000 ? 'Critical' : ourTax >= 5000 ? 'High' : 'Medium';
+          results.push({
+            key,
+            invoiceNo: ob.invoiceNo,
+            invoiceDate: ob.invoiceDate,
+            vendorName: ob.vendorName,
+            vendorGstin: ob.vendorGstin,
+            vendorEmail: ob.vendorEmail || 'accounts@vendor.in',
+            status: 'Missing in Vendor Data',
+            severity,
+            issueSummary: 'Invoice recorded in our books but missing in Vendor GSTR-2B CSV (Full ITC at risk).',
+            ourBill: ob,
+            vendorBill: null,
+            ourTotal: round2(ob.totalAmount),
+            ourTax,
+            vendorTotal: 0,
+            vendorTax: 0,
+            taxVariance: ourTax,
+            totalVariance: round2(ob.totalAmount)
+          });
+          return;
+        }
+
+        const vendorTax = round2((vb.cgst || 0) + (vb.sgst || 0) + (vb.igst || 0));
+        const taxDiff = round2(Math.abs(ourTax - vendorTax));
+        const totalDiff = round2(Math.abs(ob.totalAmount - vb.totalAmount));
+        const gstinMatch = (ob.vendorGstin || '').trim().toUpperCase() === (vb.vendorGstin || '').trim().toUpperCase();
+        const dateMatch = (ob.invoiceDate || '').trim() === (vb.invoiceDate || '').trim();
+        const recipientGstin = (vb.recipientGstin || '').trim().toUpperCase();
+        const ourGstinNorm = (OUR_ENTITY.gstin || '').trim().toUpperCase();
+        const recipientGstinMatch = !recipientGstin || recipientGstin === ourGstinNorm;
+
+        if (totalDiff <= 1 && taxDiff <= 1 && gstinMatch && dateMatch && recipientGstinMatch) {
+          results.push({
+            key,
+            invoiceNo: ob.invoiceNo,
+            invoiceDate: ob.invoiceDate,
+            vendorName: ob.vendorName,
+            vendorGstin: ob.vendorGstin,
+            vendorEmail: ob.vendorEmail || vb.vendorEmail || 'accounts@vendor.in',
+            status: 'Exact Match',
+            severity: 'None',
+            issueSummary: `Zero discrepancy. Verified against Taxpayer GSTIN ${OUR_ENTITY.gstin} for GSTR-3B / GSTR-1 filing.`,
+            ourBill: ob,
+            vendorBill: vb,
+            ourTotal: round2(ob.totalAmount),
+            ourTax,
+            vendorTotal: round2(vb.totalAmount),
+            vendorTax,
+            taxVariance: 0,
+            totalVariance: 0
+          });
+        } else if (totalDiff > 1 || taxDiff > 1) {
+          const issues = [];
+          if (Math.abs(ob.taxableValue - vb.taxableValue) > 1) {
+            issues.push(`Taxable value mismatch (Ours: ${formatINR(ob.taxableValue)} vs Vendor: ${formatINR(vb.taxableValue)})`);
+          }
+          if (taxDiff > 1) {
+            issues.push(`GST tax mismatch (Ours: ${formatINR(ourTax)} vs Vendor: ${formatINR(vendorTax)})`);
+          }
+          if (!gstinMatch) issues.push(`Vendor GSTIN mismatch (${ob.vendorGstin} vs ${vb.vendorGstin})`);
+          if (!recipientGstinMatch) issues.push(`Billed-to GSTIN mismatch (Vendor billed ${recipientGstin} instead of our ${ourGstinNorm})`);
+          if (!dateMatch) issues.push(`Date mismatch (${ob.invoiceDate} vs ${vb.invoiceDate})`);
+
+          const severity = taxDiff >= 10000 ? 'Critical' : taxDiff >= 2000 ? 'High' : 'Medium';
+          results.push({
+            key,
+            invoiceNo: ob.invoiceNo,
+            invoiceDate: ob.invoiceDate,
+            vendorName: ob.vendorName,
+            vendorGstin: ob.vendorGstin,
+            vendorEmail: ob.vendorEmail || vb.vendorEmail || 'accounts@vendor.in',
+            status: 'Tax / Amount Mismatch',
+            severity,
+            issueSummary: issues.join(' • '),
+            ourBill: ob,
+            vendorBill: vb,
+            ourTotal: round2(ob.totalAmount),
+            ourTax,
+            vendorTotal: round2(vb.totalAmount),
+            vendorTax,
+            taxVariance: round2(ourTax - vendorTax),
+            totalVariance: round2(ob.totalAmount - vb.totalAmount)
+          });
+        } else {
+          const issues = [];
+          if (!gstinMatch) issues.push(`Vendor GSTIN mismatch (Ours: ${ob.vendorGstin} vs Vendor: ${vb.vendorGstin})`);
+          if (!recipientGstinMatch) issues.push(`Billed-to Taxpayer GSTIN mismatch (Vendor billed ${recipientGstin} instead of our ${ourGstinNorm})`);
+          if (!dateMatch) issues.push(`Invoice Date mismatch (Ours: ${ob.invoiceDate} vs Vendor: ${vb.invoiceDate})`);
+
+          results.push({
+            key,
+            invoiceNo: ob.invoiceNo,
+            invoiceDate: ob.invoiceDate,
+            vendorName: ob.vendorName,
+            vendorGstin: ob.vendorGstin,
+            vendorEmail: ob.vendorEmail || vb.vendorEmail || 'accounts@vendor.in',
+            status: 'GSTIN / Date Mismatch',
+            severity: (!gstinMatch || !recipientGstinMatch) ? 'High' : 'Low',
+            issueSummary: issues.join(' • '),
+            ourBill: ob,
+            vendorBill: vb,
+            ourTotal: round2(ob.totalAmount),
+            ourTax,
+            vendorTotal: round2(vb.totalAmount),
+            vendorTax,
+            taxVariance: 0,
+            totalVariance: 0
+          });
+        }
+      });
+
+      // Step B: Check for Unrecorded Vendor Bills
+      vendorBills.forEach(vb => {
+        const key = vb.invoiceNo.trim().toUpperCase();
+        if (!processedInvoices.has(key)) {
+          const vendorTax = round2((vb.cgst || 0) + (vb.sgst || 0) + (vb.igst || 0));
+          results.push({
+            key,
+            invoiceNo: vb.invoiceNo,
+            invoiceDate: vb.invoiceDate,
+            vendorName: vb.vendorName,
+            vendorGstin: vb.vendorGstin,
+            vendorEmail: vb.vendorEmail || 'accounts@vendor.in',
+            status: 'Unrecorded Vendor Bill',
+            severity: 'Medium',
+            issueSummary: 'Present in Vendor CSV upload, but not recorded in our purchase/sales ledger.',
+            ourBill: null,
+            vendorBill: vb,
+            ourTotal: 0,
+            ourTax: 0,
+            vendorTotal: round2(vb.totalAmount),
+            vendorTax,
+            taxVariance: -vendorTax,
+            totalVariance: -round2(vb.totalAmount)
+          });
+        }
+      });
+
+      reconciledRecords = results;
+      computeVendorRiskScores();
+      updateKPIs();
+      applySubscriptionPlanToUI();
+      renderReconciliationTable();
+      renderVendorDirectory();
+      populateVendorQuickFill();
+      refreshIcons();
+    }
+
+    function computeVendorRiskScores() {
+      const map = {};
+
+      reconciledRecords.forEach(rec => {
+        const vKey = (rec.vendorName || 'Unknown Vendor').trim();
+        if (!map[vKey]) {
+          map[vKey] = {
+            vendorName: vKey,
+            vendorGstin: rec.vendorGstin,
+            vendorEmail: rec.vendorEmail,
+            totalBills: 0,
+            matchedBills: 0,
+            discrepancyBills: 0,
+            taxAtRisk: 0,
+            riskLevel: 'Low Risk'
+          };
+        }
+        const entry = map[vKey];
+        entry.totalBills += 1;
+        if (rec.status === 'Exact Match') {
+          entry.matchedBills += 1;
+        } else {
+          entry.discrepancyBills += 1;
+          entry.taxAtRisk += Math.abs(rec.taxVariance || 0);
+        }
+      });
+
+      Object.values(map).forEach(v => {
+        const mismatchRatio = v.totalBills > 0 ? v.discrepancyBills / v.totalBills : 0;
+        if (mismatchRatio >= 0.4 || v.taxAtRisk >= 10000) {
+          v.riskLevel = 'High Risk';
+        } else if (v.discrepancyBills > 0) {
+          v.riskLevel = 'Medium Risk';
+        } else {
+          v.riskLevel = 'Low Risk';
+        }
+      });
+
+      vendorRiskMap = map;
+    }
+
+    // -------------------------------------------------------------------------
+    // 4. UI RENDERING: KPIs, RECONCILIATION TABLE & VENDOR DIRECTORY
+    // -------------------------------------------------------------------------
+    function updateKPIs() {
+      const totalInvoices = reconciledRecords.length;
+      const totalLedgerValue = ourBills.reduce((sum, b) => sum + Number(b.totalAmount || 0), 0);
+
+      const matched = reconciledRecords.filter(r => r.status === 'Exact Match');
+      const matchedItc = matched.reduce((sum, r) => sum + r.ourTax, 0);
+
+      const discrepancies = reconciledRecords.filter(r => r.status !== 'Exact Match');
+      const taxAtRisk = discrepancies.reduce((sum, r) => sum + Math.abs(r.taxVariance), 0);
+
+      const allVendors = Object.values(vendorRiskMap);
+      const highRiskVendors = allVendors.filter(v => v.riskLevel === 'High Risk');
+
+      document.getElementById('kpi-total-invoices').textContent = totalInvoices;
+      document.getElementById('kpi-total-value').textContent = `Ledger Value: ${formatINR(totalLedgerValue)}`;
+
+      document.getElementById('kpi-matched-count').textContent = matched.length;
+      document.getElementById('kpi-matched-itc').textContent = `Verified ITC: ${formatINR(matchedItc)}`;
+
+      document.getElementById('kpi-discrepancy-count').textContent = discrepancies.length;
+      document.getElementById('kpi-tax-at-risk').textContent = `Tax Variance: ${formatINR(taxAtRisk)}`;
+
+      document.getElementById('kpi-highrisk-vendors').textContent = highRiskVendors.length;
+      document.getElementById('kpi-total-vendors').textContent = `Out of ${allVendors.length} active vendors`;
+
+      document.getElementById('nav-badge-discrepancies').textContent = discrepancies.length;
+      document.getElementById('nav-badge-highrisk').textContent = highRiskVendors.length;
+    }
+
+    function renderReconciliationTable() {
+      const tbody = document.getElementById('reconciliation-table-body');
+      const emptyState = document.getElementById('recon-empty-state');
+
+      const searchTerm = (document.getElementById('recon-search').value || '').toLowerCase().trim();
+      const statusFilter = document.getElementById('recon-status-filter').value;
+      const severityFilter = document.getElementById('recon-severity-filter').value;
+
+      const filtered = reconciledRecords.filter(rec => {
+        const matchesSearch =
+          rec.invoiceNo.toLowerCase().includes(searchTerm) ||
+          rec.vendorName.toLowerCase().includes(searchTerm) ||
+          (rec.vendorGstin || '').toLowerCase().includes(searchTerm);
+
+        let matchesStatus = true;
+        if (statusFilter === 'DISCREPANCIES_ONLY') {
+          matchesStatus = rec.status !== 'Exact Match';
+        } else if (statusFilter !== 'ALL') {
+          matchesStatus = rec.status === statusFilter;
+        }
+
+        const matchesSeverity = severityFilter === 'ALL' || rec.severity === severityFilter;
+
+        return matchesSearch && matchesStatus && matchesSeverity;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        updateSelectionToolbar();
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+
+      tbody.innerHTML = filtered.map(rec => {
+        const isMatched = rec.status === 'Exact Match';
+        const isChecked = selectedDiscrepancyKeys.has(rec.key);
+        const vRisk = vendorRiskMap[rec.vendorName]?.riskLevel || 'Low Risk';
+
+        return `
+          <tr class="hover:bg-slate-50/90 transition-colors ${isChecked ? 'bg-indigo-50/40' : ''}">
+            <td class="py-3.5 pl-4 pr-2 align-top">
+              ${!isMatched ? `
+                <input type="checkbox" data-key="${rec.key}" ${isChecked ? 'checked' : ''} onchange="toggleDiscrepancySelection('${rec.key}')" class="discrepancy-checkbox w-4 h-4 mt-1 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
+              ` : `
+                <span class="inline-flex items-center justify-center w-4 h-4 mt-1 text-emerald-500" title="No discrepancy">
+                  <i data-lucide="check" class="w-4 h-4"></i>
+                </span>
+              `}
+            </td>
+            <td class="py-3.5 px-3 align-top">
+              <div class="font-mono font-bold text-slate-900 text-xs sm:text-sm">${escapeHtml(rec.invoiceNo)}</div>
+              <div class="text-xs text-slate-500 mt-0.5">${escapeHtml(rec.invoiceDate)}</div>
+            </td>
+            <td class="py-3.5 px-3 align-top">
+              <div class="font-semibold text-slate-900 text-xs sm:text-sm">${escapeHtml(rec.vendorName)}</div>
+              <div class="flex flex-wrap items-center gap-1.5 mt-1">
+                <span class="text-[11px] font-mono text-slate-500">${escapeHtml(rec.vendorGstin)}</span>
+                ${getActivePlan().hasRiskAnalysis
+                  ? renderVendorRiskBadge(vRisk)
+                  : `<button type="button" onclick="promptRiskAnalysisUpgrade()" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 hover:bg-amber-100 text-slate-500 hover:text-amber-800 border border-slate-200 transition-colors cursor-pointer" title="Unlock AI Vendor Risk Analysis in Max (₹599/mo)">🔒 Risk (Max)</button>`
+                }
+              </div>
+            </td>
+            <td class="py-3.5 px-3 align-top max-w-xs">
+              ${renderStatusBadge(rec.status)}
+              <p class="text-[11px] text-slate-500 mt-1 leading-snug">${escapeHtml(rec.issueSummary)}</p>
+            </td>
+            <td class="py-3.5 px-3 align-top">
+              ${renderSeverityBadge(rec.severity)}
+            </td>
+            <td class="py-3.5 px-3 align-top text-right font-mono">
+              <div class="font-semibold text-slate-900 text-xs sm:text-sm">${rec.ourBill ? formatINR(rec.ourTotal) : '—'}</div>
+              <div class="text-[11px] text-slate-500">Tax: ${rec.ourBill ? formatINR(rec.ourTax) : '—'}</div>
+            </td>
+            <td class="py-3.5 px-3 align-top text-right font-mono">
+              <div class="font-semibold text-slate-900 text-xs sm:text-sm">${rec.vendorBill ? formatINR(rec.vendorTotal) : '—'}</div>
+              <div class="text-[11px] text-slate-500">Tax: ${rec.vendorBill ? formatINR(rec.vendorTax) : '—'}</div>
+            </td>
+            <td class="py-3.5 px-3 align-top text-right font-mono">
+              ${rec.taxVariance === 0 && rec.totalVariance === 0 ? `
+                <span class="text-xs font-semibold text-emerald-600">₹0.00</span>
+              ` : `
+                <div class="font-bold text-rose-600 text-xs sm:text-sm">${rec.taxVariance > 0 ? '+' : ''}${formatINR(rec.taxVariance)}</div>
+                <div class="text-[10px] text-rose-500">Tax Diff</div>
+              `}
+            </td>
+            <td class="py-3.5 pl-3 pr-4 align-top text-right">
+              ${isMatched ? (
+                getActivePlan().hasGstFiling ? `
+                  <button type="button" onclick="openPortalFilingHelper('${rec.key}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all whitespace-nowrap cursor-pointer">
+                    File on GST Portal ↗
+                  </button>
+                ` : `
+                  <button type="button" onclick="promptGstFilingUpgrade()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-800 border border-slate-200 hover:border-amber-300 transition-all whitespace-nowrap cursor-pointer" title="Available on Pro (₹399/mo) & Max (₹599/mo)">
+                    <i data-lucide="lock" class="w-3 h-3"></i>
+                    GST Filing (Pro)
+                  </button>
+                `
+              ) : (
+                getActivePlan().hasMailDraft ? `
+                  <button type="button" onclick="openSingleRectificationEmail('${rec.key}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition-all whitespace-nowrap cursor-pointer">
+                    <i data-lucide="mail" class="w-3.5 h-3.5"></i>
+                    Draft Mail
+                  </button>
+                ` : `
+                  <button type="button" onclick="promptMailDraftUpgrade()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-800 border border-slate-200 hover:border-amber-300 transition-all whitespace-nowrap cursor-pointer" title="Available on Pro (₹399/mo) & Max (₹599/mo)">
+                    <i data-lucide="lock" class="w-3 h-3"></i>
+                    Draft Mail (Pro)
+                  </button>
+                `
+              )}
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      updateSelectionToolbar();
+      refreshIcons();
+    }
+
+    function renderVendorDirectory() {
+      const grid = document.getElementById('vendor-directory-grid');
+      if (!grid) return;
+      const vendors = Object.values(vendorRiskMap).sort((a, b) => b.taxAtRisk - a.taxAtRisk);
+
+      grid.innerHTML = vendors.map(v => {
+        const isHigh = v.riskLevel === 'High Risk';
+        const isMed = v.riskLevel === 'Medium Risk';
+        const borderClass = isHigh ? 'border-rose-200 bg-rose-50/20' : isMed ? 'border-amber-200 bg-amber-50/20' : 'border-slate-200 bg-white';
+        const accuracy = v.totalBills > 0 ? Math.round((v.matchedBills / v.totalBills) * 100) : 100;
+
+        return `
+          <div class="rounded-2xl border ${borderClass} p-5 flex flex-col justify-between shadow-sm">
+            <div>
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <h4 class="font-bold text-slate-900 text-base">${escapeHtml(v.vendorName)}</h4>
+                  <p class="text-xs font-mono text-slate-500 mt-0.5">GSTIN: ${escapeHtml(v.vendorGstin)}</p>
+                </div>
+                ${renderVendorRiskBadge(v.riskLevel)}
+              </div>
+
+              <div class="mt-4 grid grid-cols-3 gap-2 text-center bg-slate-50 rounded-xl p-3 border border-slate-100">
+                <div>
+                  <p class="text-[10px] uppercase font-semibold text-slate-400">Total Bills</p>
+                  <p class="text-sm font-bold text-slate-900 mt-0.5">${v.totalBills}</p>
+                </div>
+                <div>
+                  <p class="text-[10px] uppercase font-semibold text-slate-400">Mismatches</p>
+                  <p class="text-sm font-bold ${v.discrepancyBills > 0 ? 'text-rose-600' : 'text-emerald-600'} mt-0.5">${v.discrepancyBills}</p>
+                </div>
+                <div>
+                  <p class="text-[10px] uppercase font-semibold text-slate-400">Compliance</p>
+                  <p class="text-sm font-bold text-slate-900 mt-0.5">${accuracy}%</p>
+                </div>
+              </div>
+
+              <div class="mt-3 flex items-center justify-between text-xs">
+                <span class="text-slate-500">Tax / ITC at Risk:</span>
+                <span class="font-mono font-bold ${v.taxAtRisk > 0 ? 'text-rose-600' : 'text-emerald-600'}">${formatINR(v.taxAtRisk)}</span>
+              </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+              <span class="text-[11px] text-slate-400 truncate">${escapeHtml(v.vendorEmail)}</span>
+              ${v.discrepancyBills > 0 ? `
+                <button type="button" onclick="selectAllDiscrepanciesForVendor('${escapeHtml(v.vendorName)}')" class="shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white">
+                  <i data-lucide="mail-warning" class="w-3.5 h-3.5"></i>
+                  Resolve (${v.discrepancyBills})
+                </button>
+              ` : `
+                <span class="text-xs font-semibold text-emerald-600 flex items-center gap-1">
+                  <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Verified
+                </span>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+      refreshIcons();
+    }
+
+    // -------------------------------------------------------------------------
+    // 5. DISCREPANCY SELECTION & RECTIFICATION EMAIL GENERATOR
+    // -------------------------------------------------------------------------
+    function toggleDiscrepancySelection(key) {
+      if (selectedDiscrepancyKeys.has(key)) {
+        selectedDiscrepancyKeys.delete(key);
+      } else {
+        selectedDiscrepancyKeys.add(key);
+      }
+      renderReconciliationTable();
+    }
+
+    function updateSelectionToolbar() {
+      const count = selectedDiscrepancyKeys.size;
+      const label = document.getElementById('selected-count-label');
+      const btn = document.getElementById('btn-draft-selected-email');
+
+      label.textContent = `${count} discrepanc${count === 1 ? 'y' : 'ies'} selected`;
+      btn.disabled = count === 0;
+    }
+
+    function openSingleRectificationEmail(key) {
+      if (!getActivePlan().hasMailDraft) {
+        promptMailDraftUpgrade();
+        return;
+      }
+      selectedDiscrepancyKeys.clear();
+      selectedDiscrepancyKeys.add(key);
+      renderReconciliationTable();
+      openRectificationModalForSelected();
+    }
+
+    function selectAllDiscrepanciesForVendor(vendorName) {
+      if (!getActivePlan().hasMailDraft) {
+        promptMailDraftUpgrade();
+        return;
+      }
+      selectedDiscrepancyKeys.clear();
+      reconciledRecords.forEach(r => {
+        if (r.vendorName === vendorName && r.status !== 'Exact Match') {
+          selectedDiscrepancyKeys.add(r.key);
+        }
+      });
+      openRectificationModalForSelected();
+    }
+
+    function openRectificationModalForSelected() {
+      if (!getActivePlan().hasMailDraft) {
+        promptMailDraftUpgrade();
+        return;
+      }
+      const selectedItems = reconciledRecords.filter(r => selectedDiscrepancyKeys.has(r.key));
+      if (selectedItems.length === 0) return;
+
+      const byVendor = {};
+      selectedItems.forEach(item => {
+        if (!byVendor[item.vendorName]) byVendor[item.vendorName] = [];
+        byVendor[item.vendorName].push(item);
+      });
+
+      const vendorNames = Object.keys(byVendor);
+      const multiWarning = document.getElementById('multi-vendor-warning');
+      const switcherBar = document.getElementById('vendor-switcher-bar');
+
+      if (vendorNames.length > 1) {
+        multiWarning.classList.remove('hidden');
+        switcherBar.classList.remove('hidden');
+        switcherBar.innerHTML = vendorNames.map((vName, idx) => `
+          <button type="button" onclick="populateEmailDraftForVendor('${escapeHtml(vName)}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold ${idx === 0 ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+            ${escapeHtml(vName)} (${byVendor[vName].length})
+          </button>
+        `).join('');
+      } else {
+        multiWarning.classList.add('hidden');
+        switcherBar.classList.add('hidden');
+      }
+
+      window._currentGroupedDiscrepancies = byVendor;
+      populateEmailDraftForVendor(vendorNames[0]);
+      openModal('email-modal');
+    }
+
+    function populateEmailDraftForVendor(vendorName) {
+      const items = window._currentGroupedDiscrepancies[vendorName] || [];
+      if (items.length === 0) return;
+
+      const primary = items[0];
+      const invNumbers = items.map(i => i.invoiceNo).join(', ');
+
+      document.getElementById('draft-email-to').value = primary.vendorEmail;
+      document.getElementById('draft-email-subject').value =
+        `Action Required: GST Invoice Discrepancy Notice (${invNumbers}) — ${OUR_ENTITY.name} (${OUR_ENTITY.gstin})`;
+
+      const breakdownLines = items.map((item, index) => {
+        const ourTaxStr = item.ourBill ? formatINR(item.ourTax) : 'Not in Our Books';
+        const ourTotStr = item.ourBill ? formatINR(item.ourTotal) : 'Not in Our Books';
+        const venTaxStr = item.vendorBill ? formatINR(item.vendorTax) : 'Missing in Vendor GSTR-1/2B';
+        const venTotStr = item.vendorBill ? formatINR(item.vendorTotal) : 'Missing in Vendor GSTR-1/2B';
+
+        return [
+          `${index + 1}. Invoice No: ${item.invoiceNo} (Date: ${item.invoiceDate})`,
+          `   • Discrepancy Type : ${item.status} [Severity: ${item.severity}]`,
+          `   • Issue Details    : ${item.issueSummary}`,
+          `   • Our GST Ledger   : Total = ${ourTotStr} | GST Tax = ${ourTaxStr}`,
+          `   • Vendor Filing    : Total = ${venTotStr} | GST Tax = ${venTaxStr}`,
+          `   • Net Tax Variance : ${formatINR(Math.abs(item.taxVariance))}`
+        ].join('\n');
+      }).join('\n\n');
+
+      const emailBody = `Dear ${vendorName} Accounts & GST Team,
+
+During our monthly GST reconciliation between our purchase/accounting ledger and your uploaded GST invoice records (GSTR-1 / GSTR-2B) for ${OUR_ENTITY.name}${OUR_ENTITY.tradeName && OUR_ENTITY.tradeName !== OUR_ENTITY.name ? ` (Trade Name: ${OUR_ENTITY.tradeName})` : ''} (Taxpayer GSTIN: ${OUR_ENTITY.gstin}), we identified the following discrepancy/discrepancies that impact Input Tax Credit (ITC) eligibility:
+
+----------------------------------------------------------------------
+DISCREPANCY SUMMARY (${items.length} Invoice${items.length > 1 ? 's' : ''})
+----------------------------------------------------------------------
+${breakdownLines}
+----------------------------------------------------------------------
+
+Requested Action:
+1. Please review the above invoice(s) against your GSTR-1 filing records and ensure they are accurately reported against our Taxpayer GSTIN: ${OUR_ENTITY.gstin}.
+2. Share the rectified GST Tax Invoice / Credit-Debit Note and amend the corresponding entry in your upcoming GSTR-1 return so that the accurate ITC reflects in our GSTR-2B before the statutory filing deadline.
+
+Kindly acknowledge receipt of this notice and share the updated invoice copy at your earliest convenience.
+
+Warm regards,
+${OUR_ENTITY.signatory || 'Authorized Signatory'}
+GST Compliance & Accounts Team
+${OUR_ENTITY.name}
+Registered Address: ${OUR_ENTITY.address}
+Taxpayer GSTIN: ${OUR_ENTITY.gstin}
+Email: ${OUR_ENTITY.email} | Phone: ${OUR_ENTITY.phone || 'N/A'}`;
+
+      document.getElementById('draft-email-body').value = emailBody;
+      updateMailtoLink();
+    }
+
+    function updateMailtoLink() {
+      const to = encodeURIComponent(document.getElementById('draft-email-to').value.trim());
+      const cc = encodeURIComponent(document.getElementById('draft-email-cc').value.trim());
+      const subject = encodeURIComponent(document.getElementById('draft-email-subject').value.trim());
+      const body = encodeURIComponent(document.getElementById('draft-email-body').value);
+      document.getElementById('mailto-launch-btn').href = `mailto:${to}?cc=${cc}&subject=${subject}&body=${body}`;
+    }
+
+    ['draft-email-to', 'draft-email-cc', 'draft-email-subject', 'draft-email-body'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', updateMailtoLink);
+    });
+
+    function copyDraftEmailToClipboard() {
+      const to = document.getElementById('draft-email-to').value;
+      const subject = document.getElementById('draft-email-subject').value;
+      const body = document.getElementById('draft-email-body').value;
+      const fullText = `To: ${to}\nSubject: ${subject}\n\n${body}`;
+
+      const temp = document.createElement('textarea');
+      temp.value = fullText;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand('copy');
+      document.body.removeChild(temp);
+      showToast('Rectification email copied to clipboard!', 'success');
+    }
+
+    // -------------------------------------------------------------------------
+    // 6. OFFICIAL GST PORTAL HELPER (FOR EXACT MATCH BILLS)
+    // -------------------------------------------------------------------------
+    function openPortalFilingHelper(key) {
+      if (!getActivePlan().hasGstFiling) {
+        promptGstFilingUpgrade();
+        return;
+      }
+      const rec = reconciledRecords.find(r => r.key === key);
+      if (!rec) return;
+
+      const body = document.getElementById('portal-modal-body');
+      body.innerHTML = `
+        <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-700">100% Reconciled Invoice</span>
+            <span class="font-mono text-xs font-bold text-emerald-900">${escapeHtml(rec.invoiceNo)}</span>
+          </div>
+          <p class="text-xs text-emerald-800">Both your ledger and <strong>${escapeHtml(rec.vendorName)}</strong> (${escapeHtml(rec.vendorGstin)}) match on taxable amount, GST tax, and date.</p>
+          <div class="pt-2 border-t border-emerald-200/80 grid grid-cols-2 gap-2 text-xs">
+            <div><span class="text-emerald-700">Verified ITC:</span> <strong class="font-mono">${formatINR(rec.ourTax)}</strong></div>
+            <div><span class="text-emerald-700">Invoice Total:</span> <strong class="font-mono">${formatINR(rec.ourTotal)}</strong></div>
+          </div>
+        </div>
+        <p class="text-xs text-slate-600 leading-relaxed">
+          You can now proceed directly to the official Goods and Services Tax (GST) Government Portal to file your GSTR-3B / GSTR-1 return with zero ITC mismatch risk.
+        </p>
+        <div class="flex items-center justify-end gap-2.5 pt-2">
+          <button type="button" onclick="closeModal('portal-modal')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">Cancel</button>
+          <a href="https://www.gst.gov.in/" target="_blank" rel="noopener noreferrer" onclick="closeModal('portal-modal')" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm">
+            Proceed to gst.gov.in ↗
+          </a>
+        </div>
+      `;
+      openModal('portal-modal');
+    }
+
+    function promptMailDraftUpgrade() {
+      openUpgradePrompt({
+        tierBadge: 'Pro & Max Feature',
+        title: 'Unlock Automated Rectification Mail Drafts',
+        description: 'Generate ready-to-send GST discrepancy notices with itemized tax variance breakdowns and one-click email launch on Pro or Max.',
+        highlightHtml: `
+          <div class="font-semibold">Recommended: Pro Plan — ₹399 / month</div>
+          <div class="text-indigo-800">Includes 100 bills/month, automated rectification mail drafts, and direct GST Portal filing.</div>
+        `
+      });
+    }
+
+    function promptGstFilingUpgrade() {
+      openUpgradePrompt({
+        tierBadge: 'Pro & Max Feature',
+        title: 'Unlock Direct GST Portal Filing Readiness',
+        description: 'Verify GSTR-3B / GSTR-1 filing readiness and launch directly into the official GST portal on Pro or Max.',
+        highlightHtml: `
+          <div class="font-semibold">Recommended: Pro Plan — ₹399 / month</div>
+          <div class="text-indigo-800">Includes 100 bills/month, direct GST filing helper, and automated vendor email drafts.</div>
+        `
+      });
+    }
+
+    function promptRiskAnalysisUpgrade() {
+      openUpgradePrompt({
+        tierBadge: 'Max Exclusive Feature',
+        title: 'Unlock Vendor Risk Analysis & Directory',
+        description: 'Identify high-risk suppliers, track ITC exposure by vendor, and resolve bulk discrepancies in one click with Max & Enterprise.',
+        highlightHtml: `
+          <div class="font-semibold">Max & Enterprise Plan — ₹599 / month</div>
+          <div class="text-indigo-800">Includes unlimited bills, full vendor risk intelligence, GST filing, mail drafts, and all platform features.</div>
+        `
+      });
+    }
+
+    function promptBillQuotaUpgrade(attemptedTotal) {
+      const plan = getActivePlan();
+      openUpgradePrompt({
+        tierBadge: `${plan.name} Limit Reached (${plan.billLimit} Bills/Mo)`,
+        title: 'Monthly Bill Generation & Comparison Limit Reached',
+        description: `Your ${plan.name} plan allows generating and comparing up to ${plan.billLimit} bills per month (this action would bring usage to ${attemptedTotal} bills).`,
+        highlightHtml: `
+          <div class="font-semibold">Level Up for More Capacity:</div>
+          <div class="text-indigo-800">• <strong>Pro (₹399/mo):</strong> Up to 100 bills/month + Mail Drafts & GST Filing</div>
+          <div class="text-indigo-800">• <strong>Max (₹599/mo):</strong> Unlimited bills + Vendor Risk Analysis & All Features</div>
+        `
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // 7. GENERATE GST BILL FORM & TAX INVOICE PREVIEW
+    // -------------------------------------------------------------------------
+    function setupBillForm() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('bill-inv-date').value = today;
+      suggestNextInvoiceNumber();
+
+      addLineItemRow({ description: 'Industrial Automation Sensor Module', hsn: '9032', qty: 10, rate: 2500, gstRate: 18 });
+
+      document.getElementById('bill-supply-type').addEventListener('change', recalculateBillFormTotals);
+      document.getElementById('bill-vendor-state').addEventListener('change', (e) => {
+        const ourStateCode = (OUR_ENTITY.state || '27-Maharashtra').slice(0, 2);
+        document.getElementById('bill-supply-type').value = e.target.value.startsWith(ourStateCode) ? 'INTRA' : 'INTER';
+        recalculateBillFormTotals();
+      });
+
+      document.getElementById('bill-vendor-gstin').addEventListener('input', (e) => {
+        const val = e.target.value.toUpperCase().trim();
+        e.target.value = val;
+        const hint = document.getElementById('gstin-validation-hint');
+        const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+        if (val.length === 0) {
+          hint.textContent = 'Format: 2-digit State Code + 10-char PAN + 1Z + Checksum';
+          hint.className = 'text-[11px] text-slate-400 mt-1';
+        } else if (gstinRegex.test(val)) {
+          hint.textContent = '✓ Valid 15-character Indian GSTIN structure';
+          hint.className = 'text-[11px] text-emerald-600 font-medium mt-1';
+        } else {
+          hint.textContent = `Enter valid 15-char GSTIN (${val.length}/15 chars)`;
+          hint.className = 'text-[11px] text-amber-600 mt-1';
+        }
+      });
+
+      document.getElementById('quick-fill-vendor').addEventListener('change', (e) => {
+        const selectedName = e.target.value;
+        if (!selectedName) return;
+        const match = ourBills.find(b => b.vendorName === selectedName) || vendorBills.find(b => b.vendorName === selectedName);
+        if (match) {
+          document.getElementById('bill-vendor-name').value = match.vendorName;
+          document.getElementById('bill-vendor-gstin').value = match.vendorGstin;
+          document.getElementById('bill-vendor-email').value = match.vendorEmail || '';
+          if (match.vendorState) {
+            document.getElementById('bill-vendor-state').value = match.vendorState;
+            const ourStateCode = (OUR_ENTITY.state || '27-Maharashtra').slice(0, 2);
+            document.getElementById('bill-supply-type').value = match.vendorState.startsWith(ourStateCode) ? 'INTRA' : 'INTER';
+          }
+          recalculateBillFormTotals();
+        }
+      });
+
+      document.getElementById('gst-bill-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const billObj = extractBillObjectFromForm();
+        if (!billObj) return;
+
+        const existingIndex = ourBills.findIndex(b => b.invoiceNo.toUpperCase() === billObj.invoiceNo.toUpperCase());
+        const isBrandNewInvoice = existingIndex === -1 && !vendorBills.some(vb => vb.invoiceNo.toUpperCase() === billObj.invoiceNo.toUpperCase());
+        const currentUsage = getMonthlyBillUsageCount();
+        const plan = getActivePlan();
+
+        if (isBrandNewInvoice && currentUsage >= plan.billLimit) {
+          promptBillQuotaUpgrade(currentUsage + 1);
+          return;
+        }
+
+        if (existingIndex >= 0) {
+          ourBills[existingIndex] = billObj;
+        } else {
+          ourBills.unshift(billObj);
+        }
+
+        saveState();
+        runReconciliation();
+        renderOurBillsSidebar();
+        showToast(`Saved ${billObj.invoiceNo} (${formatINR(billObj.totalAmount)}) & updated reconciliation!`, 'success');
+        suggestNextInvoiceNumber();
+      });
+
+      renderOurBillsSidebar();
+    }
+
+    function suggestNextInvoiceNumber() {
+      const nextNum = 101 + ourBills.length;
+      document.getElementById('bill-inv-no').value = `INV-2026-${nextNum}`;
+    }
+
+    function populateVendorQuickFill() {
+      const select = document.getElementById('quick-fill-vendor');
+      const names = [...new Set([...ourBills.map(b => b.vendorName), ...vendorBills.map(b => b.vendorName)])];
+      select.innerHTML = `<option value="">-- Quick-fill existing vendor --</option>` +
+        names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
+    }
+
+    function addLineItemRow(preset = { description: '', hsn: '8471', qty: 1, rate: 0, gstRate: 18 }) {
+      const tbody = document.getElementById('bill-items-tbody');
+      const tr = document.createElement('tr');
+      tr.className = 'item-row';
+      tr.innerHTML = `
+        <td class="p-2">
+          <input type="text" required placeholder="Item / Service Name" value="${escapeHtml(preset.description)}" class="item-desc w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white" />
+        </td>
+        <td class="p-2">
+          <input type="text" required placeholder="HSN" value="${escapeHtml(preset.hsn)}" class="item-hsn w-full px-2 py-1.5 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg" />
+        </td>
+        <td class="p-2">
+          <input type="number" min="1" step="1" required value="${preset.qty}" class="item-qty w-full px-2 py-1.5 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg" />
+        </td>
+        <td class="p-2">
+          <input type="number" min="0" step="0.01" required value="${preset.rate}" class="item-rate w-full px-2 py-1.5 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg" />
+        </td>
+        <td class="p-2">
+          <select class="item-gst w-full px-2 py-1.5 text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg">
+            <option value="5" ${preset.gstRate == 5 ? 'selected' : ''}>5%</option>
+            <option value="12" ${preset.gstRate == 12 ? 'selected' : ''}>12%</option>
+            <option value="18" ${preset.gstRate == 18 ? 'selected' : ''}>18%</option>
+            <option value="28" ${preset.gstRate == 28 ? 'selected' : ''}>28%</option>
+          </select>
+        </td>
+        <td class="p-2 text-right font-mono text-xs font-semibold text-slate-800 item-row-taxable">₹0.00</td>
+        <td class="p-2 text-center">
+          <button type="button" onclick="removeLineItemRow(this)" class="p-1 text-slate-400 hover:text-rose-600 rounded" title="Remove row">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+
+      tr.querySelectorAll('input, select').forEach(el => {
+        el.addEventListener('input', recalculateBillFormTotals);
+        el.addEventListener('change', recalculateBillFormTotals);
+      });
+
+      recalculateBillFormTotals();
+      refreshIcons();
+    }
+
+    function removeLineItemRow(btn) {
+      const rows = document.querySelectorAll('#bill-items-tbody .item-row');
+      if (rows.length <= 1) {
+        showToast('At least one line item is required.', 'info');
+        return;
+      }
+      btn.closest('tr').remove();
+      recalculateBillFormTotals();
+    }
+
+    function recalculateBillFormTotals() {
+      const supplyType = document.getElementById('bill-supply-type').value;
+      const rows = document.querySelectorAll('#bill-items-tbody .item-row');
+
+      let totalTaxable = 0;
+      let totalGst = 0;
+
+      rows.forEach(row => {
+        const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+        const rate = parseFloat(row.querySelector('.item-rate').value) || 0;
+        const gstRate = parseFloat(row.querySelector('.item-gst').value) || 0;
+
+        const rowTaxable = round2(qty * rate);
+        const rowTax = round2(rowTaxable * (gstRate / 100));
+
+        totalTaxable += rowTaxable;
+        totalGst += rowTax;
+
+        row.querySelector('.item-row-taxable').textContent = formatINR(rowTaxable);
+      });
+
+      totalTaxable = round2(totalTaxable);
+      totalGst = round2(totalGst);
+
+      let cgst = 0, sgst = 0, igst = 0;
+      if (supplyType === 'INTRA') {
+        cgst = round2(totalGst / 2);
+        sgst = round2(totalGst - cgst);
+        document.getElementById('calc-cgst-row').classList.remove('hidden');
+        document.getElementById('calc-sgst-row').classList.remove('hidden');
+        document.getElementById('calc-igst-row').classList.add('hidden');
+      } else {
+        igst = totalGst;
+        document.getElementById('calc-cgst-row').classList.add('hidden');
+        document.getElementById('calc-sgst-row').classList.add('hidden');
+        document.getElementById('calc-igst-row').classList.remove('hidden');
+      }
+
+      const grandTotal = round2(totalTaxable + cgst + sgst + igst);
+
+      document.getElementById('calc-taxable').textContent = formatINR(totalTaxable);
+      document.getElementById('calc-cgst').textContent = formatINR(cgst);
+      document.getElementById('calc-sgst').textContent = formatINR(sgst);
+      document.getElementById('calc-igst').textContent = formatINR(igst);
+      document.getElementById('calc-grand-total').textContent = formatINR(grandTotal);
+
+      return { taxableValue: totalTaxable, cgst, sgst, igst, totalAmount: grandTotal };
+    }
+
+    function extractBillObjectFromForm() {
+      const invoiceNo = document.getElementById('bill-inv-no').value.trim().toUpperCase();
+      const invoiceDate = document.getElementById('bill-inv-date').value;
+      const supplyType = document.getElementById('bill-supply-type').value;
+      const vendorName = document.getElementById('bill-vendor-name').value.trim();
+      const vendorGstin = document.getElementById('bill-vendor-gstin').value.trim().toUpperCase();
+      const vendorEmail = document.getElementById('bill-vendor-email').value.trim();
+      const vendorState = document.getElementById('bill-vendor-state').value;
+
+      if (!invoiceNo || !vendorName || vendorGstin.length !== 15) {
+        showToast('Please fill all required fields including a valid 15-character GSTIN.', 'error');
+        return null;
+      }
+
+      const items = [];
+      document.querySelectorAll('#bill-items-tbody .item-row').forEach(row => {
+        items.push({
+          description: row.querySelector('.item-desc').value.trim() || 'Goods / Services',
+          hsn: row.querySelector('.item-hsn').value.trim() || '9983',
+          qty: parseFloat(row.querySelector('.item-qty').value) || 1,
+          rate: parseFloat(row.querySelector('.item-rate').value) || 0,
+          gstRate: parseFloat(row.querySelector('.item-gst').value) || 18
+        });
+      });
+
+      const totals = recalculateBillFormTotals();
+
+      return {
+        invoiceNo,
+        invoiceDate,
+        supplyType,
+        vendorName,
+        vendorGstin,
+        vendorEmail,
+        vendorState,
+        items,
+        ...totals
+      };
+    }
+
+    function renderOurBillsSidebar() {
+      const container = document.getElementById('our-bills-list');
+      container.innerHTML = ourBills.map(bill => `
+        <div onclick="openInvoicePreviewModal('${escapeHtml(bill.invoiceNo)}')" class="p-3.5 rounded-xl border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/30 cursor-pointer transition-all group">
+          <div class="flex items-center justify-between">
+            <span class="font-mono text-xs font-bold text-indigo-700 group-hover:underline">${escapeHtml(bill.invoiceNo)}</span>
+            <span class="text-[11px] text-slate-400">${escapeHtml(bill.invoiceDate)}</span>
+          </div>
+          <p class="text-xs font-semibold text-slate-800 mt-1 truncate">${escapeHtml(bill.vendorName)}</p>
+          <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 text-xs">
+            <span class="font-mono text-[11px] text-slate-500">${escapeHtml(bill.vendorGstin)}</span>
+            <span class="font-mono font-bold text-slate-900">${formatINR(bill.totalAmount)}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function previewCurrentFormInvoice() {
+      const bill = extractBillObjectFromForm();
+      if (!bill) return;
+      renderInvoiceModalContent(bill);
+      openModal('invoice-modal');
+    }
+
+    function openInvoicePreviewModal(invoiceNo) {
+      const bill = ourBills.find(b => b.invoiceNo === invoiceNo);
+      if (!bill) return;
+      renderInvoiceModalContent(bill);
+      openModal('invoice-modal');
+    }
+
+    function renderInvoiceModalContent(bill) {
+      const area = document.getElementById('printable-invoice-area');
+      const itemsHtml = (bill.items || []).map((it, idx) => {
+        const taxable = round2(it.qty * it.rate);
+        const taxAmt = round2(taxable * (it.gstRate / 100));
+        return `
+          <tr class="border-b border-slate-200 text-xs">
+            <td class="py-2.5 px-2 text-slate-500">${idx + 1}</td>
+            <td class="py-2.5 px-2 font-medium text-slate-900">${escapeHtml(it.description)}</td>
+            <td class="py-2.5 px-2 font-mono text-slate-600">${escapeHtml(it.hsn)}</td>
+            <td class="py-2.5 px-2 text-right font-mono">${it.qty}</td>
+            <td class="py-2.5 px-2 text-right font-mono">${formatINR(it.rate)}</td>
+            <td class="py-2.5 px-2 text-right font-mono">${it.gstRate}%</td>
+            <td class="py-2.5 px-2 text-right font-mono font-semibold">${formatINR(taxable + taxAmt)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      area.innerHTML = `
+        <div class="flex flex-col sm:flex-row justify-between items-start border-b-2 border-slate-900 pb-4 gap-4">
+          <div>
+            <span class="px-2.5 py-1 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-widest rounded">GST Tax Invoice</span>
+            <h2 class="text-xl font-extrabold text-slate-900 mt-2">${escapeHtml(OUR_ENTITY.name)}</h2>
+            ${OUR_ENTITY.tradeName && OUR_ENTITY.tradeName !== OUR_ENTITY.name ? `<p class="text-xs font-semibold text-slate-700">Trade Name: ${escapeHtml(OUR_ENTITY.tradeName)}</p>` : ''}
+            <p class="text-xs text-slate-600 mt-0.5">${escapeHtml(OUR_ENTITY.address)}</p>
+            <p class="text-xs font-mono font-semibold text-slate-800 mt-1">GSTIN: ${escapeHtml(OUR_ENTITY.gstin)} • State: ${escapeHtml(OUR_ENTITY.state)}</p>
+            <p class="text-[11px] text-slate-600 mt-0.5">Email: ${escapeHtml(OUR_ENTITY.email)}${OUR_ENTITY.phone ? ` • Phone: ${escapeHtml(OUR_ENTITY.phone)}` : ''}</p>
+          </div>
+          <div class="sm:text-right text-xs space-y-1">
+            <p><span class="text-slate-500">Invoice No:</span> <strong class="font-mono text-sm text-slate-900">${escapeHtml(bill.invoiceNo)}</strong></p>
+            <p><span class="text-slate-500">Invoice Date:</span> <strong>${escapeHtml(bill.invoiceDate)}</strong></p>
+            <p><span class="text-slate-500">Financial Year:</span> <strong>${escapeHtml(OUR_ENTITY.financialYear || 'FY 2026-27')}</strong></p>
+            <p><span class="text-slate-500">Supply Type:</span> <strong>${bill.supplyType === 'INTRA' ? 'Intra-State (CGST+SGST)' : 'Inter-State (IGST)'}</strong></p>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Counterparty / Vendor Details</p>
+          <p class="text-sm font-bold text-slate-900 mt-1">${escapeHtml(bill.vendorName)}</p>
+          <p class="font-mono text-slate-700 mt-0.5">GSTIN: <strong>${escapeHtml(bill.vendorGstin)}</strong></p>
+          <p class="text-slate-600 mt-0.5">Place of Supply: ${escapeHtml(bill.vendorState || 'India')} • Email: ${escapeHtml(bill.vendorEmail || '')}</p>
+        </div>
+
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-100 border-y border-slate-300 text-[11px] font-bold uppercase text-slate-700">
+              <th class="py-2 px-2">#</th>
+              <th class="py-2 px-2">Description</th>
+              <th class="py-2 px-2">HSN/SAC</th>
+              <th class="py-2 px-2 text-right">Qty</th>
+              <th class="py-2 px-2 text-right">Rate</th>
+              <th class="py-2 px-2 text-right">GST</th>
+              <th class="py-2 px-2 text-right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHtml}
+          </tbody>
+        </table>
+
+        <div class="flex flex-col sm:flex-row justify-between items-end gap-6 pt-2">
+          <div class="text-xs text-slate-600 space-y-1">
+            <p class="font-semibold text-slate-800">For ${escapeHtml(OUR_ENTITY.name)}</p>
+            <p class="pt-6 font-medium text-slate-900 border-t border-slate-300 inline-block pr-8">${escapeHtml(OUR_ENTITY.signatory || 'Authorized Signatory')}</p>
+          </div>
+          <div class="w-64 space-y-1.5 text-xs bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <div class="flex justify-between"><span>Taxable Value:</span><span class="font-mono font-semibold">${formatINR(bill.taxableValue)}</span></div>
+            ${bill.cgst > 0 ? `<div class="flex justify-between"><span>CGST:</span><span class="font-mono">${formatINR(bill.cgst)}</span></div>` : ''}
+            ${bill.sgst > 0 ? `<div class="flex justify-between"><span>SGST:</span><span class="font-mono">${formatINR(bill.sgst)}</span></div>` : ''}
+            ${bill.igst > 0 ? `<div class="flex justify-between"><span>IGST:</span><span class="font-mono">${formatINR(bill.igst)}</span></div>` : ''}
+            <div class="pt-2 border-t border-slate-300 flex justify-between text-sm font-extrabold text-slate-900">
+              <span>Grand Total:</span>
+              <span class="font-mono">${formatINR(bill.totalAmount)}</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('btn-download-single-json').onclick = () => {
+        triggerFileDownload(JSON.stringify(bill, null, 2), `${bill.invoiceNo}_GST_Invoice.json`, 'application/json');
+      };
+    }
+
+    // -------------------------------------------------------------------------
+    // 8. VENDOR CSV UPLOAD, PARSING & SAMPLE GENERATION
+    // -------------------------------------------------------------------------
+    function setupCsvUpload() {
+      const dropzone = document.getElementById('csv-dropzone');
+      const fileInput = document.getElementById('csv-file-input');
+
+      dropzone.addEventListener('click', () => fileInput.click());
+
+      dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('border-indigo-500', 'bg-indigo-50/50');
+      });
+
+      dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('border-indigo-500', 'bg-indigo-50/50');
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('border-indigo-500', 'bg-indigo-50/50');
+        const file = e.dataTransfer.files[0];
+        if (file) handleCsvFile(file);
+      });
+
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) handleCsvFile(file);
+      });
+    }
+
+    function handleCsvFile(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target.result;
+        parseAndStageCsvText(text, file.name);
+      };
+      reader.readAsText(file);
+    }
+
+    function parseAndStageCsvText(csvText, sourceLabel = 'Uploaded CSV') {
+      const lines = csvText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (lines.length < 2) {
+        showToast('CSV file appears empty or missing data rows.', 'error');
+        return;
+      }
+
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const parsed = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const cols = splitCsvLine(lines[i]);
+        if (cols.length < 6) continue;
+
+        const getCol = (names, fallbackIdx) => {
+          for (const n of names) {
+            const idx = headers.indexOf(n.toLowerCase());
+            if (idx !== -1 && cols[idx] !== undefined) return cols[idx].trim();
+          }
+          return cols[fallbackIdx] ? cols[fallbackIdx].trim() : '';
+        };
+
+        const invoiceNo = getCol(['invoiceno', 'invoice_no', 'invoice number'], 0);
+        const invoiceDate = getCol(['invoicedate', 'invoice_date', 'date'], 1);
+        const vendorName = getCol(['vendorname', 'vendor_name', 'vendor'], 2);
+        const vendorGstin = getCol(['vendorgstin', 'vendor_gstin', 'gstin'], 3).toUpperCase();
+        const vendorEmail = getCol(['vendoremail', 'vendor_email', 'email'], 4) || 'accounts@vendor.in';
+        const taxableValue = parseFloat(getCol(['taxablevalue', 'taxable_value', 'taxable'], 5)) || 0;
+        const cgst = parseFloat(getCol(['cgst'], 6)) || 0;
+        const sgst = parseFloat(getCol(['sgst'], 7)) || 0;
+        const igst = parseFloat(getCol(['igst'], 8)) || 0;
+        const totalAmount = parseFloat(getCol(['totalamount', 'total_amount', 'total'], 9)) || round2(taxableValue + cgst + sgst + igst);
+        const recipientGstin = getCol(['recipientgstin', 'recipient_gstin', 'billedtogstin', 'customer_gstin'], 10).toUpperCase();
+
+        if (invoiceNo) {
+          parsed.push({
+            invoiceNo,
+            invoiceDate,
+            vendorName,
+            vendorGstin,
+            vendorEmail,
+            taxableValue,
+            cgst,
+            sgst,
+            igst,
+            totalAmount,
+            recipientGstin
+          });
+        }
+      }
+
+      stagedCsvRows = parsed;
+      renderStagedCsvPreview(sourceLabel);
+    }
+
+    function loadDefaultStagedVendorCSV() {
+      const csv = generateSampleVendorCSVString();
+      parseAndStageCsvText(csv, 'Vendor_GSTR2B_Sample_Export.csv');
+    }
+
+    function renderStagedCsvPreview(sourceLabel) {
+      const tbody = document.getElementById('csv-preview-tbody');
+      const subtitle = document.getElementById('csv-preview-subtitle');
+      const btn = document.getElementById('btn-commit-csv');
+
+      if (stagedCsvRows.length === 0) {
+        subtitle.textContent = 'Could not parse valid invoice rows from CSV.';
+        btn.disabled = true;
+        return;
+      }
+
+      subtitle.textContent = `Staged ${stagedCsvRows.length} vendor invoices from "${sourceLabel}". Ready to reconcile.`;
+      btn.disabled = false;
+
+      tbody.innerHTML = stagedCsvRows.map(r => {
+        const tax = round2(r.cgst + r.sgst + r.igst);
+        return `
+          <tr class="hover:bg-slate-50">
+            <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${escapeHtml(r.invoiceNo)}</td>
+            <td class="py-2.5 px-3 text-slate-600">${escapeHtml(r.invoiceDate)}</td>
+            <td class="py-2.5 px-3">
+              <div class="font-semibold text-slate-800">${escapeHtml(r.vendorName)}</div>
+              <div class="font-mono text-[11px] text-slate-500">${escapeHtml(r.vendorGstin)}</div>
+            </td>
+            <td class="py-2.5 px-3 text-right font-mono">${formatINR(r.taxableValue)}</td>
+            <td class="py-2.5 px-3 text-right font-mono text-indigo-700">${formatINR(tax)}</td>
+            <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-900">${formatINR(r.totalAmount)}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function commitStagedCSV() {
+      if (stagedCsvRows.length === 0) return;
+      const mode = document.getElementById('csv-import-mode').value;
+      const plan = getActivePlan();
+
+      // Calculate resulting unique monthly bill count before committing
+      const projectedSet = new Set(ourBills.map(b => b.invoiceNo.toUpperCase()));
+      if (mode !== 'REPLACE') {
+        vendorBills.forEach(b => projectedSet.add(b.invoiceNo.toUpperCase()));
+      }
+      stagedCsvRows.forEach(r => projectedSet.add(r.invoiceNo.toUpperCase()));
+
+      if (projectedSet.size > plan.billLimit) {
+        promptBillQuotaUpgrade(projectedSet.size);
+        return;
+      }
+
+      if (mode === 'REPLACE') {
+        vendorBills = cloneDefaultData(stagedCsvRows);
+      } else {
+        const map = new Map(vendorBills.map(b => [b.invoiceNo.toUpperCase(), b]));
+        stagedCsvRows.forEach(row => map.set(row.invoiceNo.toUpperCase(), row));
+        vendorBills = Array.from(map.values());
+      }
+
+      saveState();
+      runReconciliation();
+      switchTab('dashboard');
+      showToast(`Imported ${stagedCsvRows.length} vendor GST records & completed reconciliation!`, 'success');
+    }
+
+    function generateSampleVendorCSVString() {
+      const headers = 'InvoiceNo,InvoiceDate,VendorName,VendorGSTIN,VendorEmail,TaxableValue,CGST,SGST,IGST,TotalAmount';
+      const rows = DEFAULT_VENDOR_BILLS.map(b =>
+        [
+          b.invoiceNo,
+          b.invoiceDate,
+          `"${b.vendorName}"`,
+          b.vendorGstin,
+          b.vendorEmail,
+          b.taxableValue,
+          b.cgst,
+          b.sgst,
+          b.igst,
+          b.totalAmount
+        ].join(',')
+      );
+      return [headers, ...rows].join('\n');
+    }
+
+    // -------------------------------------------------------------------------
+    // 9. CSV EXPORTS (OUR GENERATED BILLS & DISCREPANCY REPORT)
+    // -------------------------------------------------------------------------
+    function downloadGeneratedBillsCSV() {
+      const headers = 'InvoiceNo,InvoiceDate,SupplyType,VendorName,VendorGSTIN,VendorEmail,TaxableValue,CGST,SGST,IGST,TotalAmount';
+      const rows = ourBills.map(b => [
+        b.invoiceNo,
+        b.invoiceDate,
+        b.supplyType,
+        `"${b.vendorName}"`,
+        b.vendorGstin,
+        b.vendorEmail || '',
+        b.taxableValue,
+        b.cgst,
+        b.sgst,
+        b.igst,
+        b.totalAmount
+      ].join(','));
+
+      triggerFileDownload([headers, ...rows].join('\n'), 'Our_Generated_GST_Bills.csv', 'text/csv;charset=utf-8;');
+      showToast('Exported Our Generated GST Bills CSV.', 'success');
+    }
+
+    function downloadDiscrepancyReportCSV() {
+      const discrepancies = reconciledRecords.filter(r => r.status !== 'Exact Match');
+      if (discrepancies.length === 0) {
+        showToast('Zero discrepancies found! All bills are matched.', 'info');
+        return;
+      }
+
+      const headers = 'InvoiceNo,InvoiceDate,VendorName,VendorGSTIN,VendorRisk,Status,Severity,OurTotal,VendorTotal,OurTax,VendorTax,TaxVariance,IssueSummary';
+      const rows = discrepancies.map(r => {
+        const risk = vendorRiskMap[r.vendorName]?.riskLevel || 'Low Risk';
+        return [
+          r.invoiceNo,
+          r.invoiceDate,
+          `"${r.vendorName}"`,
+          r.vendorGstin,
+          risk,
+          `"${r.status}"`,
+          r.severity,
+          r.ourTotal,
+          r.vendorTotal,
+          r.ourTax,
+          r.vendorTax,
+          r.taxVariance,
+          `"${r.issueSummary.replace(/"/g, '""')}"`
+        ].join(',');
+      });
+
+      triggerFileDownload([headers, ...rows].join('\n'), 'GST_Discrepancy_Audit_Report.csv', 'text/csv;charset=utf-8;');
+      showToast(`Exported ${discrepancies.length} discrepancies to CSV.`, 'success');
+    }
+
+    // -------------------------------------------------------------------------
+    // 10. NAVIGATION, FILTERS, MODALS & UI HELPERS
+    // -------------------------------------------------------------------------
+    function setupNavigation() {
+      const navBtns = document.querySelectorAll('.nav-btn');
+      navBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tab = btn.getAttribute('data-tab');
+          switchTab(tab);
+          if (window.innerWidth < 1024) {
+            document.getElementById('sidebar').classList.add('hidden');
+          }
+        });
+      });
+
+      document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+        const sb = document.getElementById('sidebar');
+        sb.classList.remove('hidden');
+        sb.classList.add('fixed', 'inset-y-0', 'left-0');
+      });
+
+      document.getElementById('close-mobile-menu').addEventListener('click', () => {
+        document.getElementById('sidebar').classList.add('hidden');
+      });
+    }
+
+    function switchTab(tabName) {
+      if (tabName === 'vendors' && !getActivePlan().hasRiskAnalysis) {
+        promptRiskAnalysisUpgrade();
+        return;
+      }
+
+      if (tabName !== 'levelup') {
+        lastActiveTab = tabName;
+      }
+
+      const views = ['dashboard', 'generate', 'import', 'vendors', 'levelup'];
+      views.forEach(v => {
+        const el = document.getElementById(`view-${v}`);
+        if (!el) return;
+        if (v === tabName) el.classList.remove('hidden');
+        else el.classList.add('hidden');
+      });
+
+      const mainHeader = document.getElementById('main-workspace-header');
+      if (mainHeader) {
+        if (tabName === 'levelup') mainHeader.classList.add('hidden');
+        else mainHeader.classList.remove('hidden');
+      }
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        const tab = btn.getAttribute('data-tab');
+        const isTarget = tab === tabName;
+        if (tab === 'levelup') {
+          btn.className = isTarget
+            ? 'nav-btn w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-amber-500 to-indigo-600 shadow-md transition-all'
+            : 'nav-btn w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold text-amber-200 bg-gradient-to-r from-amber-500/15 via-indigo-500/15 to-purple-500/15 hover:from-amber-500/25 hover:to-indigo-500/25 border border-amber-400/25 transition-all';
+        } else if (isTarget) {
+          btn.className = 'nav-btn w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium transition-all bg-indigo-600 text-white shadow-md shadow-indigo-950/40';
+        } else {
+          btn.className = 'nav-btn w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800/80 hover:text-white transition-all';
+        }
+      });
+
+      const titles = {
+        dashboard: ['Dashboard & GST Reconciliation', 'Compare purchase/sales GST ledger against vendor CSV filings to prevent ITC leakage.'],
+        generate: ['Generate GST Tax Invoice', 'Create GST-compliant bills with automated CGST/SGST/IGST math and instant reconciliation.'],
+        import: ['Import Vendor GST CSV', 'Upload vendor-submitted GSTR-2B / sales exports to detect mismatches and missing ITC.'],
+        vendors: ['Vendor Risk & Compliance Directory', 'Monitor vendor filing accuracy, risk ratings, and resolve bulk discrepancies.'],
+        levelup: ['Level Up — Plans & Pricing', 'Upgrade your TaxSync GST workspace for higher monthly bill limits and risk intelligence.']
+      };
+
+      if (titles[tabName]) {
+        document.getElementById('page-title').textContent = titles[tabName][0];
+        document.getElementById('page-subtitle').textContent = titles[tabName][1];
+      }
+      refreshIcons();
+    }
+
+    function setupFilters() {
+      ['recon-search', 'recon-status-filter', 'recon-severity-filter'].forEach(id => {
+        document.getElementById(id).addEventListener('input', renderReconciliationTable);
+        document.getElementById(id).addEventListener('change', renderReconciliationTable);
+      });
+
+      document.getElementById('select-all-discrepancies').addEventListener('change', (e) => {
+        const checked = e.target.checked;
+        document.querySelectorAll('.discrepancy-checkbox').forEach(cb => {
+          const key = cb.getAttribute('data-key');
+          if (checked) selectedDiscrepancyKeys.add(key);
+          else selectedDiscrepancyKeys.delete(key);
+        });
+        renderReconciliationTable();
+      });
+    }
+
+    function setupModalDismissHandlers() {
+      const modalIds = ['entityModal', 'email-modal', 'invoice-modal', 'portal-modal', 'upgradePromptModal'];
+
+      modalIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('click', (e) => {
+          if (e.target === el) {
+            closeModal(id);
+          }
+        });
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          modalIds.forEach(id => closeModal(id));
+        }
+      });
+    }
+
+    function renderStatusBadge(status) {
+      const styles = {
+        'Exact Match': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        'Tax / Amount Mismatch': 'bg-rose-50 text-rose-700 border-rose-200',
+        'GSTIN / Date Mismatch': 'bg-amber-50 text-amber-800 border-amber-200',
+        'Missing in Vendor Data': 'bg-purple-50 text-purple-700 border-purple-200',
+        'Unrecorded Vendor Bill': 'bg-sky-50 text-sky-700 border-sky-200'
+      };
+      const cls = styles[status] || 'bg-slate-100 text-slate-700 border-slate-200';
+      return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${cls}">${escapeHtml(status)}</span>`;
+    }
+
+    function renderSeverityBadge(severity) {
+      const styles = {
+        'Critical': 'bg-rose-600 text-white',
+        'High': 'bg-rose-100 text-rose-800 border border-rose-200',
+        'Medium': 'bg-amber-100 text-amber-800 border border-amber-200',
+        'Low': 'bg-sky-100 text-sky-800 border border-sky-200',
+        'None': 'bg-slate-100 text-slate-500'
+      };
+      const cls = styles[severity] || 'bg-slate-100 text-slate-600';
+      return `<span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold ${cls}">${escapeHtml(severity)}</span>`;
+    }
+
+    function renderVendorRiskBadge(risk) {
+      if (risk === 'High Risk') {
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200">● High Risk</span>`;
+      }
+      if (risk === 'Medium Risk') {
+        return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">● Medium Risk</span>`;
+      }
+      return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">● Low Risk</span>`;
+    }
+
+    function openModal(id) {
+      const modal = document.getElementById(id);
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex';
+      refreshIcons();
+    }
+
+    function closeModal(id) {
+      const modal = document.getElementById(id);
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const colors = {
+        success: 'bg-emerald-900 text-white border-emerald-700',
+        error: 'bg-rose-900 text-white border-rose-700',
+        info: 'bg-slate-900 text-white border-slate-700'
+      };
+      const toast = document.createElement('div');
+      toast.className = `pointer-events-auto px-4 py-3 rounded-xl border shadow-lg text-xs font-medium flex items-center gap-2.5 transition-all ${colors[type] || colors.info}`;
+      toast.innerHTML = `<span>${escapeHtml(message)}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3400);
+    }
+
+    function triggerFileDownload(content, filename, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function splitCsvLine(line) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') {
+          inQuotes = !inQuotes;
+        } else if (ch === ',' && !inQuotes) {
+          result.push(current);
+          current = '';
+        } else {
+          current += ch;
+        }
+      }
+      result.push(current);
+      return result;
+    }
+
+    function formatINR(num) {
+      const val = Number(num || 0);
+      return '₹' + val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function round2(n) {
+      return Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+  </script>
+</body>
+</html>
